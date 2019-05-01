@@ -1,0 +1,36 @@
+{
+  "name": "paperless",
+  "version": "1.0.0",
+  "description": "dynamic split payment for the owanbe culture",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Connarts/paperless.git"
+  },
+  "keywords": [
+    "dynamic",
+    "split",
+    "payments",
+    "africa",
+    "nigeria",
+    "owanbe",
+    "culture",
+    "money",
+    "gang",
+    "wallet"
+  ],
+  "author": "@wachukxs, @theakomolafe, @Obakam",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Connarts/paperless/issues"
+  },
+  "homepage": "https://github.com/Connarts/paperless#readme",
+  "dependencies": {
+    "express": "^4.16.4",
+    "nodemon": "^1.19.0",
+    "request": "^2.88.0"
+  }
+}
