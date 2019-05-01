@@ -1,2 +1,2 @@
 # paperless
-dynamic split payments
+dynamic split payments mostly to accomodate the owanbe culture
