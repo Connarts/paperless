@@ -14,7 +14,7 @@ var pool = mysql.createPool({
     host: 'localhost', // def change to connarts.com.ng before deployment
     user: 'connarts_ossai',
     password: "ossai'spassword",
-    database: 'connarts_nysc',
+    database: 'paperless',
     acquireTimeout: 1800000, // 10000 is 10 secs
     multipleStatements: true // it allows for SQL injection attacks if values are not properly escaped
   });
@@ -90,6 +90,7 @@ class Rave {
 
 var rave = new Rave('FLWPUBK_TEST-d5a78c2b35917bfd5ae94fec1c751c57-X','FLWSECK_TEST-aeab0c72b5207a5c1de76023ecd73c62-X');
 
+var morgan = require('morgan');
 var express = require('express');
 var http = require('http');
 var bodyParser = require('body-parser');
@@ -100,6 +101,8 @@ app.use(session({
     resave: false,
     saveUninitialized: true
 }));
+// set morgan to log info about our requests for development use.
+// app.use(morgan('dev'));
 app.use(express.static('assets'));
 app.set('view engine', 'ejs');
 // The app.locals object has properties that are local variables within the application.
@@ -121,13 +124,13 @@ server.listen(60581, function () { // auto change port if port is already in use
 app.get('/', function (req, res) {
     res.type('html');
     res.contentType('*/*');
-    res.sendFile(__dirname + '/index.html');    
+    res.sendFile(__dirname + '/login.html');    
 });
 
 app.get('/login', function (req, res) {
     res.type('html');
     res.contentType('*/*');
-    res.sendFile(__dirname + '/new look/login.html');    
+    res.sendFile(__dirname + '/login.html');    
 });
 
 app.get('/register', function (req, res) {
@@ -140,6 +143,18 @@ app.get('/dashboard', function (req, res) {
     res.type('html');
     res.contentType('*/*');
     res.sendFile(__dirname + '/dashboard.html');    
+});
+
+app.get('/widgets', function (req, res) {
+    res.type('html');
+    res.contentType('*/*');
+    res.sendFile(__dirname + '/widgets.html');
+});
+
+app.get('/elements', function (req, res) {
+    res.type('html');
+    res.contentType('*/*');
+    res.sendFile(__dirname + '/elements.html');
 });
 
 app.post('/chargecard', bodyParser.urlencoded({ extended: true/* , type: 'application/x-www-form-urlencoded' */ }), function (req, res) {
@@ -178,9 +193,12 @@ app.post('/chargecard', bodyParser.urlencoded({ extended: true/* , type: 'applic
 
   app.post('/createvirtualcard', bodyParser.urlencoded({ extended: true/* , type: 'application/x-www-form-urlencoded' */ }), function (req, res) {
     console.log('the message:', req.body);
+    console.log('how much ?', (req.body.billingcurrency ? '100' : '10'));
+
+    console.log();
 
     var newvirtualcard_options = {
-        url: "https://api.ravepay.co/v2/services/virtualcards/new",
+        url: "https://ravesandboxapi.flutterwave.com/v2/services/virtualcards/new",
         method: "POST",
         headers: {
             'Content-Type': 'application/json',
@@ -188,15 +206,15 @@ app.post('/chargecard', bodyParser.urlencoded({ extended: true/* , type: 'applic
         },
         body: {
             "secret_key":"FLWSECK_TEST-aeab0c72b5207a5c1de76023ecd73c62-X",
-            "currency": "NGN", // || "USD",
-            "amount": "100", // 10 USD = 100 NGN
-            "billing_name": "Mohammed Lawal",
-            "billing_address": "DREAM BOULEVARD",
-            "billing_city": "ADYEN",
-            "billing_state": "NEW LANGE",
-            "billing_postal_code": "293094",
-            "billing_country": "NG", // || "US",
-          "callback_url": "https://your-callback-url.com/"
+            "currency": (req.body.billingcurrency ? 'NGN' : 'USD' ), // "NGN", // || "USD",
+            "amount": (req.body.billingcurrency ? '132090' : '102320'), // "100", // 10 USD = 100 NGN [NGN max is  1,000,000]
+            "billing_name": req.body.name,
+            "billing_address": req.body.address,
+            "billing_city": req.body.city,
+            "billing_state": req.body.state,
+            "billing_postal_code": req.body.postalcode,
+            "billing_country": req.body.country, // "NG", // || "US",
+          "callback_url": "http://localhost:60581/widgets"
         },
         json: true
     }
@@ -204,18 +222,24 @@ app.post('/chargecard', bodyParser.urlencoded({ extended: true/* , type: 'applic
     request(newvirtualcard_options)
         .then((result) => {
             // note Capitalized Status and lowercase status
-            result.status == "success"; // 200 OK [Card created successfully, save the response to database]
-            result.Status == "Failed"; // 200 Failed callback when a card is used
-            result.Status == "Successful"; // 200 Successful callback when a card is used
-            resolve(result);
+            // result.status == "success"; // 200 OK [Card created successfully, save the response to database]
+            // result.Status == "Failed"; // 200 Failed callback when a card is used
+            // result.Status == "Successful"; // 200 Successful callback when a card is used
+            
+            // resolve(result);
+            console.log('good success', result);
         }).catch((err) => {
-            reject(err);
+            // reject(err);
+            console.log('bad report', err);
         });
+
+        res.redirect(req.headers.referer.substring(22));
+        // res.send('okay');
   });
 
   function fundVirtualCard(id, amount, debit_currency) { // This is id returned for the card. You can pick this up from the Create a Virtual Card API response.
     var fundvirtualcard_options = {
-        url: "https://api.ravepay.co/v2/services/virtualcards/fund",
+        url: "https://ravesandboxapi.flutterwave.com/v2/services/virtualcards/fund",
         method: "POST",
         headers: {
             'Content-Type': 'application/json',
@@ -243,7 +267,7 @@ app.post('/chargecard', bodyParser.urlencoded({ extended: true/* , type: 'applic
 
   function fetchCardTransactions(id, begin_date, end_date, debit_currency) { // This is id returned for the card. You can pick this up from the Create a Virtual Card API response.
     var fetchcardtransactions_options = {
-        url: "https://api.ravepay.co/v2/services/virtualcards/transactions",
+        url: "https://ravesandboxapi.flutterwave.com/v2/services/virtualcards/transactions",
         method: "POST",
         headers: {
             'Content-Type': 'application/json',
@@ -272,7 +296,7 @@ app.post('/chargecard', bodyParser.urlencoded({ extended: true/* , type: 'applic
 
   function getVirtualCard(id) { // This is id returned for the card. You can pick this up from the Create a Virtual Card API response.
     var getvirtualcard_options = {
-        url: "https://api.ravepay.co/v2/services/virtualcards/get",
+        url: "https://ravesandboxapi.flutterwave.com/v2/services/virtualcards/get",
         method: "POST",
         headers: {
             'Content-Type': 'application/json',
@@ -301,7 +325,7 @@ app.post('/chargecard', bodyParser.urlencoded({ extended: true/* , type: 'applic
        * var request = require("request");
 
         var options = { method: 'POST',
-        url: 'https://api.ravepay.co/v2/services/virtualcards/card_id/status/status_action' };
+        url: 'https://ravesandboxapi.flutterwave.com/v2/services/virtualcards/card_id/status/status_action' };
 
         request(options, function (error, response, body) {
         if (error) throw new Error(error);
@@ -311,7 +335,7 @@ app.post('/chargecard', bodyParser.urlencoded({ extended: true/* , type: 'applic
        */
 
       var freezeorunfreezevirtualcard_options = {
-        url: "https://api.ravepay.co/v2/services/virtualcards/" + card_id + "/status/" + status_action,
+        url: "https://ravesandboxapi.flutterwave.com/v2/services/virtualcards/" + card_id + "/status/" + status_action,
         method: "POST",
         headers: {
             'Content-Type': 'application/json',
