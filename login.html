@@ -70,7 +70,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   <nav id="navbar-main" class="navbar navbar-horizontal navbar-transparent navbar-main navbar-expand-lg navbar-light">
     <div class="container">
       <a class="navbar-brand" href="/dashboard">
-        <img src="img/white.png">
+        <img src="img/h trans paperless_logo.png">
       </a>
       <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapse" aria-controls="navbar-collapse" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
@@ -80,7 +80,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
           <div class="row">
             <div class="col-6 collapse-brand">
               <a href="/dashboard">
-                <img src="img/blue.png">
+                <img src="img/h trans paperless_logo.png">
               </a>
             </div>
             <div class="col-6 collapse-close">
@@ -181,7 +181,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       <div class="row justify-content-center">
         <div class="col-lg-5 col-md-7">
           <div class="card bg-secondary border-0 mb-0">
-            <div class="card-header bg-transparent pb-5">
+            <!-- <div class="card-header bg-transparent pb-5">
               <div class="text-muted text-center mt-2 mb-3"><small>Sign in with</small></div>
               <div class="btn-wrapper text-center">
                 <a href="#" class="btn btn-neutral btn-icon">
@@ -193,18 +193,18 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                   <span class="btn-inner--text">Google</span>
                 </a>
               </div>
-            </div>
+            </div> -->
             <div class="card-body px-lg-5 py-lg-5">
               <div class="text-center text-muted mb-4">
-                <small>Or sign in with credentials</small>
+                <small><!-- Or --> Sign in with credentials</small>
               </div>
-              <form role="form">
+              <form role="form" method="POST" action="/login" enctype="application/x-www-form-urlencoded">
                 <div class="form-group mb-3">
                   <div class="input-group input-group-merge input-group-alternative">
                     <div class="input-group-prepend">
-                      <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                      <span class="input-group-text"><i class="fas fa-phone"></i></span>
                     </div>
-                    <input class="form-control" placeholder="Email" type="email">
+                    <input class="form-control" name="phonenumber" placeholder="Phone number" type="tel">
                   </div>
                 </div>
                 <div class="form-group">
@@ -212,17 +212,18 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                     <div class="input-group-prepend">
                       <span class="input-group-text"><i class="fas fa-lock"></i></span>
                     </div>
-                    <input class="form-control" placeholder="Password" type="password">
+                    <input class="form-control" name="password" autocomplete="current-password" placeholder="Password" type="password">
                   </div>
                 </div>
-                <div class="custom-control custom-control-alternative custom-checkbox">
+                <!-- <div class="custom-control custom-control-alternative custom-checkbox">
                   <input class="custom-control-input" id=" customCheckLogin" type="checkbox">
                   <label class="custom-control-label" for=" customCheckLogin">
                     <span class="text-muted">Remember me</span>
                   </label>
-                </div>
+                </div> -->
                 <div class="text-center">
-                  <button type="button" class="btn btn-primary my-4">Sign in</button>
+                  <input type="submit" class="btn btn-primary my-4" value="Sign in">
+                  <!-- <button type="button" class="btn btn-primary my-4">Sign in</button> -->
                 </div>
               </form>
             </div>
@@ -269,7 +270,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   </footer>
   <!-- Argon Scripts -->
   <!-- Core -->
-  <script src="js/jquery.min.js"></script>
+  <script src="js/jquery-3.3.1.min.js"></script>
   <script src="js/bootstrap.bundle.min.js"></script>
   <script src="js/js.cookie.js"></script>
   <script src="js/jquery.scrollbar.min.js"></script>

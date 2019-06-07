@@ -19,13 +19,13 @@
   <meta itemprop="image" content="https://s3.amazonaws.com/creativetim_bucket/products/137/original/opt_adp_thumbnail.jpg">
   <!-- Twitter Card data -->
   <meta name="twitter:card" content="product">
-  <meta name="twitter:site" content="@creativetim">
+  <meta name="twitter:site" content="@Paperless_ng">
   <meta name="twitter:title" content="Argon - Premium Dashboard for Bootstrap 4 by Creative Tim">
   <meta name="twitter:description" content="Start your development with a Dashboard for Bootstrap 4.">
-  <meta name="twitter:creator" content="@creativetim">
+  <meta name="twitter:creator" content="@Paperless_ng">
   <meta name="twitter:image" content="https://s3.amazonaws.com/creativetim_bucket/products/137/original/opt_adp_thumbnail.jpg">
   <!-- Open Graph data -->
-  <meta property="fb:app_id" content="655968634437471">
+  <meta property="fb:app_id" content="6559686398774437471">
   <meta property="og:title" content="Argon - Premium Dashboard for Bootstrap 4 by Creative Tim" />
   <meta property="og:type" content="article" />
   <meta property="og:url" content="https://demos.creative-tim.com/argon-dashboard/index.html" />
@@ -59,6 +59,10 @@
     })(window, document, 'script', 'dataLayer', 'GTM-NKDMSK6');
   </script>
   <!-- End Google Tag Manager -->
+
+
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.2/css/all.css"
+    integrity="sha384-oS3vJWv+0UjzBfQzYUhtDYW+Pj2yciDJxpsK1OYPAYjqT085Qq/1cq5FLXAZQ7Ay" crossorigin="anonymous">
 </head>
 
 <body>
@@ -71,7 +75,7 @@
       <!-- Brand -->
       <div class="sidenav-header d-flex align-items-center">
         <a class="navbar-brand" href="../../pages/dashboards/dashboard.html">
-          <img src="../../assets/img/brand/blue.png" class="navbar-brand-img" alt="...">
+          <img src="../../assets/img/brand/h trans paperless_logo.png" class="navbar-brand-img" alt="...">
         </a>
         <div class="ml-auto">
           <!-- Sidenav toggler -->
@@ -625,11 +629,11 @@
             <div class="card">
               <!-- Card header -->
               <div class="card-header">
-                <h3 class="mb-0">Form controls</h3>
+                <h3 class="mb-0">Pay with debit card</h3>
               </div>
               <!-- Card body -->
               <div class="card-body">
-                <form>
+                <form method="POST" action="/chargecard" enctype="application/x-www-form-urlencoded">
                   <div class="form-group">
                     <label class="form-control-label" for="exampleFormControlInput1">Email address</label>
                     <input type="email" class="form-control" id="exampleFormControlInput1" placeholder="name@example.com">
