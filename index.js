@@ -199,6 +199,7 @@ app.post('/register', bodyParser.urlencoded({ extended: true/* , type: 'applicat
         if (results.affectedRows === 1) {
             req.session.user = req.body;
             req.session.loggedin = true;
+            console.log('Done');
             res.redirect('/widgets'); // res.redirect('/dashboard');
         }
     });
