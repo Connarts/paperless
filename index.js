@@ -1,8 +1,24 @@
+// for rave.flutterwave.com
+
 // FLWSECK_TEST-aeab0c72b5207a5c1de76023ecd73c62-X
 
 // FLWPUBK_TEST-d5a78c2b35917bfd5ae94fec1c751c57-X
 
 // FLWSECK_TEST96b1ae5fb5e0
+
+// ---------for rave.flutterwave.com
+
+/// ...we'd be using the ravesandbox for now
+
+// for ravesandbox.flutterwave.com
+
+// FLWSECK-26e7c0b3aa54290f3359c127701a1640-X
+
+// FLWPUBK-9cd4c40991322af027613870bc4af472-X
+
+// 26e7c0b3aa546f209678029c
+
+// ---------for ravesandbox.flutterwave.com
 
 /**
  * https://stackoverflow.com/questions/679915/how-do-i-test-for-an-empty-javascript-object
@@ -113,7 +129,7 @@ class Rave {
     }
 }
 
-var rave = new Rave('FLWPUBK_TEST-d5a78c2b35917bfd5ae94fec1c751c57-X', 'FLWSECK_TEST-aeab0c72b5207a5c1de76023ecd73c62-X');
+var rave = new Rave('FLWPUBK-9cd4c40991322af027613870bc4af472-X', 'FLWSECK-26e7c0b3aa54290f3359c127701a1640-X');
 
 var bodyParser = require('body-parser');
 var morgan = require('morgan');
@@ -210,10 +226,11 @@ app.post('/register', bodyParser.urlencoded({ extended: true/* , type: 'applicat
 app.post('/login', bodyParser.urlencoded({ extended: true }), function (req, res/*, handleRedirect*/) {
     // handle post request, validate data with database.
     // how to handle wrong password with right email or more rearly, right password and wrong password.
+    
     console.log('seeing ...', req.body.phonenumber, req.body.password);
     var sqlquery = "SELECT phone_number, password FROM people WHERE phone_number = '" + req.body.phonenumber + "' AND password = '" + req.body.password + "' ";
     pool.query(sqlquery, function (error1, results1, fields1) {
-        console.log('selected data from db, logging In...', results1, results1[0], isEmpty(results1)); // error sometimes, maybe when there's no db conn: ...
+        
         if (error1) throw error1;
         // connected!
         if (isEmpty(results1)) {
@@ -221,6 +238,8 @@ app.post('/login', bodyParser.urlencoded({ extended: true }), function (req, res
             // res.status(403);
             res.status(502).redirect(req.headers.referer.substring(22));
         } else if (results1.length === 1) {
+
+            console.log('selected data from db, logging In...', results1, results1[0], isEmpty(results1)); // error sometimes, maybe when there's no db conn: ...
 
             console.log('req.session.id: ', req.session.id);
             /* // insert login time and session id into db for usage details
@@ -289,7 +308,7 @@ app.post('/createvirtualcard', bodyParser.urlencoded({ extended: true/* , type: 
             'Accept': 'application/json'
         },
         body: {
-            "secret_key": "FLWSECK_TEST-aeab0c72b5207a5c1de76023ecd73c62-X",
+            "secret_key": "FLWSECK-26e7c0b3aa54290f3359c127701a1640-X",
             "currency": (req.body.billingcurrency ? 'NGN' : 'USD'), // "NGN", // || "USD",
             "amount": (req.body.billingcurrency ? '132090' : '102320'), // "100", // 10 USD = 100 NGN [NGN max is  1,000,000]
             "billing_name": req.body.name,
