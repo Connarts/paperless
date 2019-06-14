@@ -4,7 +4,7 @@
 
 // FLWPUBK_TEST-d5a78c2b35917bfd5ae94fec1c751c57-X
 
-// FLWSECK_TEST96b1ae5fb5e0
+// FLWSECK_TEST96b1ae5fb5e0 // encryption key ??
 
 // ---------for rave.flutterwave.com
 
@@ -19,6 +19,14 @@
 // 26e7c0b3aa546f209678029c
 
 // ---------for ravesandbox.flutterwave.com
+
+/***
+ * FLWPUBK-cf2b3d8af1418e72ecb501098eba6074-X
+ * 
+ * FLWSECK-4f372a1a310358710fc145f40748126b-X
+ * 
+ * 4f372a1a310382dd2d832af5 // encryption key
+ */
 
 /**
  * https://stackoverflow.com/questions/679915/how-do-i-test-for-an-empty-javascript-object
@@ -55,7 +63,7 @@ var pool = mysql.createPool({
     host: 'localhost', // def change to connarts.com.ng before deployment
     user: 'connarts_ossai',
     password: "ossai'spassword",
-    database: 'paperless',
+    database: /* 'connarts_paperless' ||  */'paperless',
     acquireTimeout: 1800000, // 10000 is 10 secs
     multipleStatements: true // it allows for SQL injection attacks if values are not properly escaped
 });
@@ -121,15 +129,20 @@ class Rave {
 
             request(payment_options)
                 .then((result) => {
+                    console.log('\n\n\n\tcard charge resolve object', result);
+
                     resolve(result);
                 }).catch((err) => {
-                    reject(err);
+                    console.log('\n\n\n\tcard charge reject object', err);
+                    reject(err.message);
                 });
         })
     }
 }
 
-var rave = new Rave('FLWPUBK-9cd4c40991322af027613870bc4af472-X', 'FLWSECK-26e7c0b3aa54290f3359c127701a1640-X');
+// var rave = new Rave('FLWPUBK_TEST-d5a78c2b35917bfd5ae94fec1c751c57-X', 'FLWSECK_TEST-aeab0c72b5207a5c1de76023ecd73c62-X');
+
+var rave = new Rave('FLWPUBK-9cd4c40991322af027613870bc4af472-X', 'FLWSECK-26e7c0b3aa54290f3359c127701a1640-X'); // sandbox
 
 var bodyParser = require('body-parser');
 var morgan = require('morgan');
@@ -188,6 +201,7 @@ app.get('/dashboard', function (req, res) {
 });
 
 app.get('/widgets', function (req, res) {
+    console.log('\t\t\t\t\t\t\n\n\n\n\n req.statusCode: ', req.statusCode, req.statusMessage, res.statusCode, res.statusMessage);
     res.type('html');
     res.contentType('*/*');
     res.sendFile(__dirname + '/widgets.html');
@@ -226,16 +240,17 @@ app.post('/register', bodyParser.urlencoded({ extended: true/* , type: 'applicat
 app.post('/login', bodyParser.urlencoded({ extended: true }), function (req, res/*, handleRedirect*/) {
     // handle post request, validate data with database.
     // how to handle wrong password with right email or more rearly, right password and wrong password.
-    
+
     console.log('seeing ...', req.body.phonenumber, req.body.password);
-    var sqlquery = "SELECT phone_number, password FROM people WHERE phone_number = '" + req.body.phonenumber + "' AND password = '" + req.body.password + "' ";
+    var sqlquery = `SELECT * FROM people WHERE phone_number = '${req.body.phonenumber}' AND password = '${req.body.password}' `;
     pool.query(sqlquery, function (error1, results1, fields1) {
-        
+
         if (error1) throw error1;
         // connected!
         if (isEmpty(results1)) {
             // res.sendStatus(406);
             // res.status(403);
+            console.log('empty results1', results1, sqlquery);
             res.status(502).redirect(req.headers.referer.substring(22));
         } else if (results1.length === 1) {
 
@@ -260,37 +275,176 @@ app.post('/login', bodyParser.urlencoded({ extended: true }), function (req, res
 
 
 });
-
+// /* bodyParser.json() */bodyParser.urlencoded({ extended: true/* , type: 'application/x-www-form-urlencoded' */ }),
 app.post('/chargecard', bodyParser.urlencoded({ extended: true/* , type: 'application/x-www-form-urlencoded' */ }), function (req, res) {
-    console.log('the message:', req.body);
+    console.log('the message:', req.body, `and phone number ${req.session.phonenumber}`);
 
-    console.log('\n\n\n\n\t', req);
+    // console.log('\n\n\n\n\t', req);
 
-    console.log('\n\n\n\n\t', req.headers);
+    // console.log('\n\n\n\n\t', req.headers);
 
     rave.initiatePayment({
         "cardno": req.body.cardno, // "5531886652142950",
         "cvv": req.body.cvv, // "890",
-        "expirymonth": "09",
-        "expiryyear": "22",
+        "expirymonth": req.body.expirymonth,
+        "expiryyear": req.body.expiryyear,
         "currency": "NGN",
-        "pin": req.body.pin, // "3310",
+        // "pin": req.body.pin, // "3310",
         "country": "NG",
         "amount": req.body.amount, // "1000",
-        "email": req.session.email, // "nwachukwuossai@gmail.com",
-        "suggested_auth": "PIN",
-        "phonenumber": req.session.phonenumber, // "09055469670",
-        "firstname": req.session.firstname, // "temi",
+        "email": req.body.email, // "nwachukwuossai@gmail.com",
+        // "suggested_auth": "PIN",
+        "phonenumber": req.session.phonenumber || "09055469670", // "09055469670",
+        "firstname": req.body.firstname, // "temi",
         "lastname": req.body.lastname, // "desola",
-        "IP": "",
+        "IP": req.header['x-forwarded-for'] || req.connection.remoteAddress,
         "txRef": "MC-" + Date.now(),
         "redirect_url": "https://rave-webhook.herokuapp.com/receivepayment",
         "meta": [{ metaname: "flightID", metavalue: "123949494DC" }],
-        "device_fingerprint": "", // "69e6b7f0b72037aa8428b70fbe03986c"
+        "device_fingerprint": "N/A", // "69e6b7f0b72037aa8428b70fbe03986c"
     }).then(result => {
-        console.log('result:', result);
-        res.send('okay');
-    }).catch(error => console.log('error:', error));
+        console.log('\t\t\t\t\nresult:', result);
+        if (result.data.flwRef && result.data.chargeResponseCode == '02') { // transaction successful = response code 00 || transaction requires validation = 02
+            // load result.data.authurl in an iframe if avaliable
+
+            if (result.data.authModelUsed == 'PIN') {
+                // the customer would be required to submit their otp based on the message returned in chargeResponseMessage
+                
+            } else if (result.data.authModelUsed == 'VBVSECURECODE') {
+                // you would be required to load the result.data.chargeResponseMessage returned in the response in an iframe.
+
+                // now we validate the payment
+                console.log('\n\n\n\n\n\n\n\n 1=1=1=1== validating payment with otp');
+                var validatecharge_options = {
+                    url: "https://ravesandboxapi.flutterwave.com/flwv3-pug/getpaidx/api/validatecharge",
+                    method: "POST",
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: {
+                        "PBFPubKey": "FLWPUBK-9cd4c40991322af027613870bc4af472-X",
+                        "transaction_reference": result.data.flwRef, 
+                        "otp": "12345"
+                      },
+                    json: true
+                }
+            
+                request(validatecharge_options)
+                    .then((result) => {
+                        // resolve(result);
+                        console.log('good success [validate charge]', result);
+                        // res.send(result);
+                        // now verifying payment
+                        var verifycharge_options = {
+                            url: "https://ravesandboxapi.flutterwave.com/flwv3-pug/getpaidx/api/v2/verify",
+                            method: "POST",
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json'
+                            },
+                            body: {
+                                "txref": result.data.tx.txRef,
+                                "SECKEY": "FLWSECK-26e7c0b3aa54290f3359c127701a1640-X"
+                            },
+                            json: true
+                        }
+                    
+                        request(verifycharge_options)
+                            .then((result) => {
+                                // resolve(result);
+                                console.log('good success [verify charge]', result);
+                                // 
+                                // now verifying payment
+                                console.log('good good good, we got paid\n\n', result);
+                                if (result.status == 'success' && result.data.amount > 99) {
+                                    res.send('we just got paid !');
+                                }
+                            }).catch((err) => {
+                                // reject(err);
+                                console.log('bad report [verify charge]', err);
+                            });
+                    }).catch((err) => {
+                        // reject(err);
+                        console.log('bad report [validate charge]', err);
+                    });
+                
+                
+            }
+        } else if (result.data.flwRef && result.data.chargeResponseCode == '00') {
+            // load result.data.authurl in an iframe
+
+            res.send(result.data);
+        }
+        if (result.status === 'success' && result.message === 'AUTH_SUGGESTION' && result.data.suggested_auth === 'PIN') {
+            console.log('\t\t---------- Using a Local Mastercard/verve i.e. card issued in Nigeria');
+            rave.initiatePayment({
+                "cardno": req.body.cardno, // "5531886652142950",
+                "cvv": req.body.cvv, // "890",
+                "expirymonth": req.body.expirymonth,
+                "expiryyear": req.body.expiryyear,
+                "currency": "NGN",
+                "pin": req.body.pin, // "3310",
+                "country": "NG",
+                "amount": req.body.amount, // "1000",
+                "email": req.session.email, // "nwachukwuossai@gmail.com",
+                "suggested_auth": "PIN",
+                "phonenumber": req.session.phonenumber || "09055469670", // "09055469670",
+                "firstname": req.body.firstname, // "temi",
+                "lastname": req.body.lastname, // "desola",
+                "IP": req.header['x-forwarded-for'] || req.connection.remoteAddress,
+                "txRef": "MC-" + Date.now(),
+                "redirect_url": "https://rave-webhook.herokuapp.com/receivepayment",
+                "meta": [{ metaname: "flightID", metavalue: "123949494DC" }],
+                "device_fingerprint": "N/A", // "69e6b7f0b72037aa8428b70fbe03986c"
+            }).then(result => {
+                console.log('\t\t\t\t\n new result:', result);
+
+
+
+            }).catch(error => {
+                console.log('\t\t\t\t\n new error:', error);
+            });
+        } else if (result.status === 'success' && result.message === 'AUTH_SUGGESTION' && result.data.suggested_auth === 'NOAUTH_INTERNATIONAL') {
+            console.log('\t\t---------- Using AVS (Address verification system) to charge an international card');
+            rave.initiatePayment({
+                "cardno": req.body.cardno, // "5531886652142950",
+                "cvv": req.body.cvv, // "890",
+                "expirymonth": req.body.expirymonth,
+                "expiryyear": req.body.expiryyear,
+                "currency": "USD",
+                "country": "NG",
+                "amount": req.body.amount, // "1000",
+                "email": req.body.email, // "nwachukwuossai@gmail.com",
+                "suggested_auth": "AVS_VBVSECURECODE" / "NOAUTH_INTERNATIONAL",
+                "billingzip": "07205",
+                "billingcity": "Hillside",
+                "billingaddress": "470 Mundet PI",
+                "billingstate": "NJ",
+                "billingcountry": "US",
+                "phonenumber": req.session.phonenumber || "09055469670", // "09055469670",
+                "firstname": req.body.firstname, // "temi",
+                "lastname": req.body.lastname, // "desola",
+                "IP": req.header['x-forwarded-for'] || req.connection.remoteAddress,
+                "txRef": "MC-" + Date.now(),
+                "redirect_url": "https://rave-webhook.herokuapp.com/receivepayment",
+                "meta": [{ metaname: "flightID", metavalue: "123949494DC" }],
+                "device_fingerprint": "N/A", // "69e6b7f0b72037aa8428b70fbe03986c"
+            }).then(result => {
+                console.log('\t\t\t\t\n new result:', result);
+                if (resp.body.status == 'error') {
+                    res.send('didn\'t work!!!');
+                }
+            }).catch(error => {
+                console.log('\t\t\t\t\n new error:', error.message);
+                res.send('didn\'t work!!! AT ALL');
+            });
+        }
+
+        // res.send('kinda okay');
+    }).catch(error => {
+        console.log('\t\t\t\t\nerror:', error);
+    });
 
 });
 
@@ -308,7 +462,7 @@ app.post('/createvirtualcard', bodyParser.urlencoded({ extended: true/* , type: 
             'Accept': 'application/json'
         },
         body: {
-            "secret_key": "FLWSECK-26e7c0b3aa54290f3359c127701a1640-X",
+            "secret_key": "FLWSECK_TEST-aeab0c72b5207a5c1de76023ecd73c62-X",
             "currency": (req.body.billingcurrency ? 'NGN' : 'USD'), // "NGN", // || "USD",
             "amount": (req.body.billingcurrency ? '132090' : '102320'), // "100", // 10 USD = 100 NGN [NGN max is  1,000,000]
             "billing_name": req.body.name,
@@ -342,7 +496,7 @@ app.post('/createvirtualcard', bodyParser.urlencoded({ extended: true/* , type: 
 
 function fundVirtualCard(id, amount, debit_currency) { // This is id returned for the card. You can pick this up from the Create a Virtual Card API response.
     var fundvirtualcard_options = {
-        url: "https://ravesandboxapi.flutterwave.com/v2/services/virtualcards/fund",
+        url: "https://api.ravepay.co/v2/services/virtualcards/fund",
         method: "POST",
         headers: {
             'Content-Type': 'application/json',
@@ -370,7 +524,7 @@ function fundVirtualCard(id, amount, debit_currency) { // This is id returned fo
 
 function fetchCardTransactions(id, begin_date, end_date, debit_currency) { // This is id returned for the card. You can pick this up from the Create a Virtual Card API response.
     var fetchcardtransactions_options = {
-        url: "https://ravesandboxapi.flutterwave.com/v2/services/virtualcards/transactions",
+        url: "https://api.ravepay.co/v2/services/virtualcards/transactions",
         method: "POST",
         headers: {
             'Content-Type': 'application/json',
@@ -399,7 +553,7 @@ function fetchCardTransactions(id, begin_date, end_date, debit_currency) { // Th
 
 function getVirtualCard(id) { // This is id returned for the card. You can pick this up from the Create a Virtual Card API response.
     var getvirtualcard_options = {
-        url: "https://ravesandboxapi.flutterwave.com/v2/services/virtualcards/get",
+        url: "https://api.ravepay.co/v2/services/virtualcards/get",
         method: "POST",
         headers: {
             'Content-Type': 'application/json',
@@ -438,7 +592,7 @@ function freezeOrUnfreezeVirtualCard(card_id, status_action) { // status_action 
      */
 
     var freezeorunfreezevirtualcard_options = {
-        url: "https://ravesandboxapi.flutterwave.com/v2/services/virtualcards/" + card_id + "/status/" + status_action,
+        url: "https://api.ravepay.co/v2/services/virtualcards/" + card_id + "/status/" + status_action,
         method: "POST",
         headers: {
             'Content-Type': 'application/json',
@@ -460,7 +614,7 @@ function freezeOrUnfreezeVirtualCard(card_id, status_action) { // status_action 
 
 function chargeBankAccount(params) {
     rave.initiatePayment({
-        "PBFPubKey": "FLWPUBK-7adb6177bd71dd43c2efa3f1229e3b7f-X",
+        "PBFPubKey": "FLWPUBK_TEST-d5a78c2b35917bfd5ae94fec1c751c57-X",
         "accountbank": "232",// get the bank code from the bank list endpoint.
         "accountnumber": "0061333471",
         "currency": "NGN",
