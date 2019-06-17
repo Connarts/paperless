@@ -219,6 +219,18 @@ app.get('/cards', function (req, res) {
     res.sendFile(__dirname + '/cards.html');
 });
 
+app.get('/logout', function (req, res) {
+    //
+    console.log('logout for ', req.session.id, req.session.phonenumber);
+    req.session.loggedin = false;
+    req.session.destroy(function (err) {
+      // cannot access session here
+      console.log('session destroyed');
+    });
+    res.redirect('/');
+  
+  });
+
 app.post('/register', bodyParser.urlencoded({ extended: true/* , type: 'application/x-www-form-urlencoded' */ }), function (req, res) {
     console.log('what we got: ', req.body);
     var sqlquery = "INSERT INTO people( phone_number, password, email) VALUES ('" + req.body.phonenumber + "', '" + req.body.password + "', '" + (req.body.email ? req.body.email : '') + "')";
@@ -269,7 +281,8 @@ app.post('/login', bodyParser.urlencoded({ extended: true }), function (req, res
                 }
 
             }); */
-            res.redirect('/dashboard');
+            req.session.phonenumber = req.body.phonenumber;
+            res.redirect('/widgets');
         }
     });
 
@@ -294,7 +307,7 @@ app.post('/chargecard', bodyParser.urlencoded({ extended: true/* , type: 'applic
         "amount": req.body.amount, // "1000",
         "email": req.body.email, // "nwachukwuossai@gmail.com",
         // "suggested_auth": "PIN",
-        "phonenumber": req.session.phonenumber || "09055469670", // "09055469670",
+        "phonenumber": req.session.phonenumber, // || "09055469670"
         "firstname": req.body.firstname, // "temi",
         "lastname": req.body.lastname, // "desola",
         "IP": req.header['x-forwarded-for'] || req.connection.remoteAddress,
@@ -389,7 +402,7 @@ app.post('/chargecard', bodyParser.urlencoded({ extended: true/* , type: 'applic
                 "amount": req.body.amount, // "1000",
                 "email": req.session.email, // "nwachukwuossai@gmail.com",
                 "suggested_auth": "PIN",
-                "phonenumber": req.session.phonenumber || "09055469670", // "09055469670",
+                "phonenumber": req.session.phonenumber, // || "09055469670"
                 "firstname": req.body.firstname, // "temi",
                 "lastname": req.body.lastname, // "desola",
                 "IP": req.header['x-forwarded-for'] || req.connection.remoteAddress,
@@ -422,7 +435,7 @@ app.post('/chargecard', bodyParser.urlencoded({ extended: true/* , type: 'applic
                 "billingaddress": "470 Mundet PI",
                 "billingstate": "NJ",
                 "billingcountry": "US",
-                "phonenumber": req.session.phonenumber || "09055469670", // "09055469670",
+                "phonenumber": req.session.phonenumber, // || "09055469670"
                 "firstname": req.body.firstname, // "temi",
                 "lastname": req.body.lastname, // "desola",
                 "IP": req.header['x-forwarded-for'] || req.connection.remoteAddress,
