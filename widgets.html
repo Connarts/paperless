@@ -45,8 +45,35 @@
     <link rel="stylesheet" href="css/sweetalert2.min.css">
     <!-- Argon CSS -->
     <link rel="stylesheet" href="css/argon.min.css" type="text/css">
+    <style>
+    #loading-bar-spinner.spinner {
+    left: 50%;
+    margin-left: -20px;
+    top: 50%;
+    margin-top: -20px;
+    position: absolute;
+    z-index: 19 !important;
+    animation: loading-bar-spinner 400ms linear infinite;
+}
+
+#loading-bar-spinner.spinner .spinner-icon {
+    width: 40px;
+    height: 40px;
+    border:  solid 4px transparent;
+    border-top-color:  #00C8B1 !important;
+    border-left-color: #00C8B1 !important;
+    border-radius: 50%;
+}
+
+@keyframes loading-bar-spinner {
+  0%   { transform: rotate(0deg);   transform: rotate(0deg); }
+  100% { transform: rotate(360deg); transform: rotate(360deg); }
+}
+
+    </style>
 
     <script src="/socket.io/socket.io.js"></script>
+    <script src="js/jquery-3.3.1.min.js"></script>
     <!-- Google Tag Manager -->
     <!-- <script>
       (function (w, d, s, l, i) {
@@ -1307,8 +1334,10 @@
                                   </div>
                                 </div> -->
                           </div>
-                          <input type="submit" class="btn btn-block btn-info" value="Add card">
-                          <!-- <button type="submit" class="btn btn-block btn-info">Save new card</button> -->
+                          <!-- <input type="submit" id="addcardsubmit"
+                            data-loading-text="<i class='fas fa-circle-notch'></i>" class="btn btn-block btn-info"
+                            value="Add card"> -->
+                          <button type="submit" id="addcardsubmit" class="btn btn-block btn-info">Save new card</button>
                         </form>
                         <!--//////////////// -->
                         <script>
@@ -1324,6 +1353,7 @@
 
                           form.addEventListener('submit', (e) => {
                             e.preventDefault();
+                            document.getElementById('addcardsubmit').innerHTML = 'Processing<div id="loading-bar-spinner" class="spinner"><div class="spinner-icon"></div></div>';
                             let data = {
                               firstname: form.elements.firstname.value,
                               lastname: form.elements.lastname.value,
@@ -1354,17 +1384,25 @@
 
                             let form2 = document.getElementById('otpform');
 
-                          form2.addEventListener('submit', (e) => {
-                            e.preventDefault();
-                            console.log('whatlfjl jfsl jlf -----------------------')
-                            let data = {
-                              otp: document.getElementById('otp').value
-                            };
-                            socket.emit('otpresponse', data, 'skld', (delivered_value) => {
-                              // this funtion will run here to show the server has gotten our message.
-                              console.log('server got our message ? ', delivered_value); // data will be 'true'
+                            form2.addEventListener('submit', (e) => {
+                              e.preventDefault();
+                              console.log('whatlfjl jfsl jlf -----------------------')
+                              let data = {
+                                otp: document.getElementById('otp').value
+                              };
+                              socket.emit('otpresponse', data, 'skld', (delivered_value) => {
+                                // this funtion will run here to show the server has gotten our message.
+                                console.log('server got our message ? ',
+                                delivered_value); // data will be 'true'
+                              });
                             });
                           });
+
+                          socket.on('paid', function (data) {
+                            document.getElementById('otpmessage').innerHTML = data.message;
+                            setTimeout(() => {
+                              back();
+                            }, 2000);
                           });
                         </script>
 
@@ -1379,8 +1417,6 @@
                             console.log('server got our message ? ', delivered_value); // data will be 'true'
                           });
                           }) */
-
-                          
                         </script>
 
                         <script>
@@ -1456,9 +1492,7 @@
                         <div class="form-group row">
                           <label for="otp" class="col-md-2 col-form-label form-control-label">OTP</label>
                           <div class="col-md-10">
-
                             <input name="otp" class="form-control" type="tel" value="12345" id="otp">
-
                           </div>
                         </div>
                         <input class="btn btn-info" type="submit" value="Pay">
@@ -1768,12 +1802,16 @@
     <!-- Argon Scripts -->
     <!-- Core -->
     <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
-    <script src="js/jquery-3.3.1.min.js"></script>
 
     <script src="js/bootstrap.bundle.min.js"></script>
     <script>
       function move() {
         $('#chargeCardCarousel').carousel('next')
+      }
+
+      function back() {
+        document.getElementById('addcardsubmit').innerHTML = "Save new card";
+        $('#chargeCardCarousel').carousel('prev');
       }
       /* setTimeout(() => {
         $('#chargeCardCarousel').carousel('prev');

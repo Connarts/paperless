@@ -288,6 +288,7 @@ payers.on('connection', function (socket) {
             console.log('\n\n\t==',response.body, '\n\n\n.tx:', response.body.data.tx);
             if (response.body.status == 'success' && response.body.data.data.responsemessage == "successful") {
                 console.log('we just got paid !');
+                socket.emit('paid', { message: 'Successful payment' });
             }
 
         });
