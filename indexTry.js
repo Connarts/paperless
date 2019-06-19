@@ -147,6 +147,12 @@ app.get('/register', function (req, res) {
     res.sendFile(__dirname + '/register.html');
 });
 
+app.get('/profile', function (req, res) {
+    res.type('html');
+    res.contentType('*/*');
+    res.sendFile(__dirname + '/profile.html');
+});
+
 app.get('/dashboard', function (req, res) {
     if (!req.session.loggedin) {
         res.redirect('/login');
