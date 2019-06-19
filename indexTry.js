@@ -87,7 +87,30 @@ const expressip = require('express-ip');
 app.use(expressip().getIpInfoMiddleware);
 // set morgan to log info about our requests for development use.
 // app.use(morgan('dev'));
+
+
+var multer = require('multer');
+// var upload = multer();
+
+// using path module removes the buffer object from the req.files array of uploaded files,... in case we ever need this... info!
+var path = require('path');
+var upload = multer({
+    dest: /* path.join(__dirname, '/img') */ '/img' // using path.join(__dirname, '/img') adds extra gibbrish
+    // you might also want to set some limits: https://github.com/expressjs/multer#limits
+});
+
 app.use(express.static('assets'));
+
+// for parsing application/json
+app.use(bodyParser.json());
+
+// for parsing application/xwww-form-urlencoded
+app.use(bodyParser.urlencoded({ extended: true }));
+
+// for parsing multipart/form-data
+app.use(upload.array());
+
+
 app.set('view engine', 'ejs');
 // The app.locals object has properties that are local variables within the application.
 app.locals.title = 'paperless';
@@ -102,7 +125,8 @@ server.listen(60581, function () { // auto change port if port is already in use
     console.log('node server listening on port :60581');
 });
 
-
+// io connects to the server
+var io = require('socket.io')(server);
 
 
 app.get('/', function (req, res) {
@@ -124,15 +148,25 @@ app.get('/register', function (req, res) {
 });
 
 app.get('/dashboard', function (req, res) {
-    res.type('html');
-    res.contentType('*/*');
-    res.sendFile(__dirname + '/dashboard.html');
+    if (!req.session.loggedin) {
+        res.redirect('/login');
+    } else {
+        res.type('html');
+        res.contentType('*/*');
+        res.sendFile(__dirname + '/dashboard.html');
+    }
+
 });
 
 app.get('/widgets', function (req, res) {
-    res.type('html');
-    res.contentType('*/*');
-    res.sendFile(__dirname + '/widgets.html');
+    if (!req.session.loggedin) {
+        res.redirect('/login');
+    } else {
+        res.type('html');
+        res.contentType('*/*');
+        res.sendFile(__dirname + '/widgets.html');
+    }
+
 });
 
 app.get('/elements', function (req, res) {
@@ -197,104 +231,131 @@ app.post('/login', bodyParser.urlencoded({ extended: true }), function (req, res
                 }
 
             }); */
-            res.redirect('/dashboard');
+            req.session.phonenumber = req.body.phonenumber;
+            req.session.loggedin = true;
+            res.redirect('/widgets?' + req.body.phonenumber);
         }
     });
 
 
 });
 
-app.post('/chargecard', bodyParser.urlencoded({ extended: true/* , type: 'application/x-www-form-urlencoded' */ }), function (req, res) {
-    console.log('the message:', req.body, `and phone number ${req.session.phonenumber}`);
 
-    console.log('\n\n\n\n\t 001- ', /* req.headers.forwarded || req.headers.from */ req.header['x-forwarded-for'] || req.connection.remoteAddress);
-    console.log('\n\n\n\n\t 002 -', req.connection.remoteAddress.split(':')[3], req.connection.remoteAddress.split(':').pop());
-    console.log('\n\n\n\n\t 003 -', req.ip, req.ips);
 
-    console.log(`\n\n\n\n\n\n\n\n\n\n ${Date.now()}`);
+var payers = io.of('/');
+payers.on('connection', function (socket) {
+    socket.on('chargecard', (data, name, fn) => {
+        
+        rave.Card.charge(
+            {
+                "cardno": data.cardno,
+                "cvv": data.cvv,
+                "expirymonth": data.expirymonth,
+                "expiryyear": data.expiryyear,
+                "currency": "NGN",
+                "country": "NG",
+                "amount": data.amount, // "1000",
+                "email": data.email, // "nwachukwuossai@gmail.com",
+                // "suggested_auth": "PIN",
+                "phonenumber": data.phonenumber, // "09055469670",
+                "firstname": data.firstname, // "temi",
+                "lastname": data.lastname, // "desola",
+                "IP": /* socket.request.header['x-forwarded-for'] || */ socket.request.connection.remoteAddress,
+                "txRef": "MC-" + Date.now(),
+                "redirect_url": "https://rave-webhook.herokuapp.com/receivepayment",
+                "meta": [{ metaname: "flightID", metavalue: "123949494DC" }],
+                "device_fingerprint": "N/A",
+            }
+        ).then(resp => {
+            console.log('>>> resp.body', resp.body);
+            socket.resp = resp.body;
+            // resp.body.data.chargeResponseMessage
+            // res.status(200).send(resp.body.data.chargeResponseMessage);
+            socket.emit('otpmessage', { message: resp.body.data.chargeResponseMessage });
 
-    console.log('req.ipInfo', req.ipInfo, '\n\n\n');
+        }).catch(err => {
+            console.log('\nerr', err);
+        })
+        fn('woot ' , name , data);
+    });
+
+    socket.on('otpresponse', (data, name, fn) => {
+        // this funtion will run in the client to show/acknowledge the server has gotten the message.
+        rave.Card.validate({
+            "transaction_reference": socket.resp.data.flwRef,
+            "otp": data.otp
+        }).then(response => {
+            console.log('\n\n\t==',response.body, '\n\n\n.tx:', response.body.data.tx);
+            if (response.body.status == 'success' && response.body.data.data.responsemessage == "successful") {
+                console.log('we just got paid !');
+            }
+
+        });
+        fn('woot ' , name , data);
+    });
+});
+app.post('/chargecard', function (req, res) {
+    console.log('\n\nthe message:', req.body, `and phone number ${req.session.phonenumber}`);
+
     rave.Card.charge(
         {
-            "cardno": req.body.cardno, // "5531886652142950",
-            "cvv": req.body.cvv, // "890",
+            "cardno": req.body.cardno,
+            "cvv": req.body.cvv,
             "expirymonth": req.body.expirymonth,
             "expiryyear": req.body.expiryyear,
             "currency": "NGN",
-            // "pin": req.body.pin, // "3310",
             "country": "NG",
             "amount": req.body.amount, // "1000",
             "email": req.body.email, // "nwachukwuossai@gmail.com",
             // "suggested_auth": "PIN",
-            "phonenumber": req.session.phonenumber || "09055469670", // "09055469670",
+            "phonenumber": req.session.phonenumber, // "09055469670",
             "firstname": req.body.firstname, // "temi",
             "lastname": req.body.lastname, // "desola",
             "IP": req.header['x-forwarded-for'] || req.connection.remoteAddress,
             "txRef": "MC-" + Date.now(),
             "redirect_url": "https://rave-webhook.herokuapp.com/receivepayment",
             "meta": [{ metaname: "flightID", metavalue: "123949494DC" }],
-            "device_fingerprint": "N/A", // "69e6b7f0b72037aa8428b70fbe03986c"
+            "device_fingerprint": "N/A",
         }
     ).then(resp => {
-        console.log('=============== resp.body', resp.body);
+        console.log('>>> resp.body', resp.body);
 
-        /* rave.Card.validate({
-            "transaction_reference":resp.body.data.flwRef,
-            "otp":12345
-        }).then(response => {
-            console.log('\nresponse body:', response.body, '\n\n\n\n.tx:', response.body.data.tx);
-            
-        }); */
-
-        if (resp.body.status === 'success' && resp.body.message === 'AUTH_SUGGESTION' && resp.body.data.suggested_auth === 'PIN') {
-            console.log('\n\tNigeria --\n\n\t');
-            rave.Card.charge(
-                {
-                    "cardno": req.body.cardno, // "5531886652142950",
-                    "cvv": req.body.cvv, // "890",
-                    "expirymonth": req.body.expirymonth,
-                    "expiryyear": req.body.expiryyear,
-                    "currency": "NGN",
-                    "pin": req.body.pin, // "3310",
-                    "country": "NG",
-                    "amount": req.body.amount, // "1000",
-                    "email": req.body.email, // "nwachukwuossai@gmail.com",
-                    "suggested_auth": "PIN",
-                    "phonenumber": req.session.phonenumber || "09055469670", // "09055469670",
-                    "firstname": req.body.firstname, // "temi",
-                    "lastname": req.body.lastname, // "desola",
-                    "IP": req.header['x-forwarded-for'] || req.connection.remoteAddress,
-                    "txRef": "MC-" + Date.now(),
-                    "redirect_url": "https://rave-webhook.herokuapp.com/receivepayment",
-                    "meta": [{ metaname: "flightID", metavalue: "123949494DC" }],
-                    "device_fingerprint": "N/A", // "69e6b7f0b72037aa8428b70fbe03986c"
-                }
-            ).then(resp => {
-                console.log('=============== resp.body [new]', resp.body);
-
-                /* rave.Card.validate({
-                    "transaction_reference":resp.body.data.flwRef,
-                    "otp":12345
+        // resp.body.data.chargeResponseMessage
+        // res.status(200).send(resp.body.data.chargeResponseMessage);
+        payers.emit('otpmessage', { message: resp.body.data.chargeResponseMessage });
+        payers.on('connection', function (socket) {
+            socket.on('otpresponse', (data, name, fn) => {
+                // this funtion will run in the client to show/acknowledge the server has gotten the message.
+                rave.Card.validate({
+                    "transaction_reference": resp.body.data.flwRef,
+                    "otp": data.otp
                 }).then(response => {
-                    console.log('\nresponse body:', response.body, '\n\n\n\n.tx:', response.body.data.tx);
-                    
-                }); */
-                if (resp.body.status == 'error') {
-                    res.send('didn\'t work!!!');
-                }
+                    console.log('\n\n\n.tx:', response.body.data.tx);
+                    if (response.body.status == 'success' && response.body.data.amount > 99) {
+                        console.log('we just got paid !');
 
 
-            }).catch(err => {
-                console.log('\nerr [new]', err);
+                        fn('woot ' + name + asf);
+                        res.send('>>>>>>>>>>>>>>>>>>>');
+                    }
 
-            })
+                });
+
+            });
+        });
+
+        async function otp() {
+            const otp = await waitForOTP();
+            console.log('the otp:', otp);
+
         }
+        // otp();
+
 
     }).catch(err => {
         console.log('\nerr', err);
 
     })
-    // --------------------
 
 
 });

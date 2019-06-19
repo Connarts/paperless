@@ -45,8 +45,10 @@
     <link rel="stylesheet" href="css/sweetalert2.min.css">
     <!-- Argon CSS -->
     <link rel="stylesheet" href="css/argon.min.css" type="text/css">
+
+    <script src="/socket.io/socket.io.js"></script>
     <!-- Google Tag Manager -->
-    <script>
+    <!-- <script>
       (function (w, d, s, l, i) {
         w[l] = w[l] || [];
         w[l].push({
@@ -61,7 +63,7 @@
           'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
         f.parentNode.insertBefore(j, f);
       })(window, document, 'script', 'dataLayer', 'GTM-NKDMSK6');
-    </script>
+    </script> -->
     <!-- End Google Tag Manager -->
 
 
@@ -1192,7 +1194,7 @@
                                   <div class="input-group-prepend">
                                     <span class="input-group-text"><i class="fas fa-calendar-week"></i></span>
                                   </div>
-                                  <input class="form-control" name="firstname" autocomplete="cc-family-name"
+                                  <input class="form-control" name="firstname" value="Ts" autocomplete="cc-family-name"
                                     placeholder="First name" type="text">
                                 </div>
                               </div>
@@ -1203,7 +1205,7 @@
                                   <div class="input-group-prepend">
                                     <span class="input-group-text"><i class="fas fa-lock"></i></span>
                                   </div>
-                                  <input class="form-control" name="lastname" autocomplete="cc-given-name"
+                                  <input class="form-control" name="lastname" value="Name" autocomplete="cc-given-name"
                                     placeholder="Last name" type="text">
                                 </div>
                               </div>
@@ -1216,8 +1218,8 @@
                                 <!-- tweak css to include the icons in the labels -->
                                 <span class="input-group-text"><i class="fas fa-user"></i></span>
                               </div>
-                              <input class="form-control" name="cardno" placeholder="Card number" type=""
-                                autocomplete="name">
+                              <input class="form-control" name="cardno" value="5399838383838381"
+                                placeholder="Card number" type="" autocomplete="name">
                             </div>
                           </div>
                           <div class="form-group">
@@ -1225,7 +1227,8 @@
                               <div class="input-group-prepend">
                                 <span class="input-group-text"><i class="far fa-credit-card"></i></span>
                               </div>
-                              <input class="form-control" name="email" placeholder="Email" type="email">
+                              <input class="form-control" name="email" value="nwachukwuossai@gmail.com"
+                                placeholder="Email" type="email">
                             </div>
                           </div>
                           <div class="row">
@@ -1235,7 +1238,7 @@
                                   <div class="input-group-prepend">
                                     <span class="input-group-text"><i class="fas fa-calendar-week"></i></span>
                                   </div>
-                                  <input class="form-control" name="expirymonth" autocomplete="cc-exp-month"
+                                  <input class="form-control" name="expirymonth" value="10" autocomplete="cc-exp-month"
                                     placeholder="MM" type="text">
                                 </div>
                               </div>
@@ -1246,7 +1249,7 @@
                                   <div class="input-group-prepend">
                                     <span class="input-group-text"><i class="fas fa-lock"></i></span>
                                   </div>
-                                  <input class="form-control" name="expiryyear" autocomplete="cc-exp-year"
+                                  <input class="form-control" name="expiryyear" value="22" autocomplete="cc-exp-year"
                                     placeholder="YY" type="text">
                                 </div>
                               </div>
@@ -1259,8 +1262,8 @@
                                   <div class="input-group-prepend">
                                     <span class="input-group-text"><i class="fas fa-lock"></i></span>
                                   </div>
-                                  <input class="form-control" name="cvv" autocomplete="cc-csc" placeholder="cvv"
-                                    type="text">
+                                  <input class="form-control" name="cvv" value="470" autocomplete="cc-csc"
+                                    placeholder="cvv" type="text">
                                   <!-- <input class="form-control" list="country" name="country" autocomplete="country"
                                         placeholder="Billing country" type="text">
                                       <datalist id="country">
@@ -1276,8 +1279,8 @@
                                   <div class="input-group-prepend">
                                     <span class="input-group-text"><i class="fas fa-calendar-week"></i></span>
                                   </div>
-                                  <input class="form-control" name="amount" autocomplete="" placeholder="Amount"
-                                    type="number">
+                                  <input class="form-control" name="amount" value="8786" autocomplete=""
+                                    placeholder="Amount" type="number">
                                 </div>
                               </div>
                             </div>
@@ -1289,7 +1292,7 @@
                                   <div class="input-group-prepend">
                                     <span class="input-group-text"><i class="fas fa-lock"></i></span>
                                   </div>
-                                  <input class="form-control" name="pin" placeholder="pin" type="">
+                                  <input class="form-control" name="pin" value="3310" placeholder="pin" type="">
                                 </div>
                               </div>
                             </div>
@@ -1309,6 +1312,14 @@
                         </form>
                         <!--//////////////// -->
                         <script>
+                          var socket = io('/', {
+                            transports: ['websocket'],
+                            query: {
+                              test: 'ertrerer'
+                            }
+                          });
+                        </script>
+                        <script>
                           let form = document.getElementById('chargecard');
 
                           form.addEventListener('submit', (e) => {
@@ -1323,69 +1334,106 @@
                               cvv: form.elements.cvv.value,
                               amount: form.elements.amount.value,
                               pin: form.elements.pin.value,
+                              phonenumber: window.location.search.substring(1)
                             };
-                            fetch('http://localhost:60581/chargecard', {
-                                method: 'POST',
-                                body: JSON.stringify(data),
-                                headers: {
-                                  'Content-Type': 'application/json'
-                                }
-                              }).then(res => {
-                                console.log(res, res.body) // log response object
-                                // return res.json() // return json data from the server
-                              })
-                              .then(response => {
-                                console.log('r:', response);
-                                alert(response);
-                              })
-                              .catch(error => console.error('Error:', error))
+
+
+                            socket.emit('chargecard', data, 'tobi', (data001) => {
+                              // this funtion will run here to show the server has gotten our message.
+                              console.log(data001); // data will be 'woot ...'
+                            });
+
+
+                          });
+
+
+                          socket.on('otpmessage', function (data) {
+                            document.getElementById('otpmessage').innerHTML = data.message;
+                            move();
+
+
+                            let form2 = document.getElementById('otpform');
+
+                          form2.addEventListener('submit', (e) => {
+                            e.preventDefault();
+                            console.log('whatlfjl jfsl jlf -----------------------')
+                            let data = {
+                              otp: document.getElementById('otp').value
+                            };
+                            socket.emit('otpresponse', data, 'skld', (delivered_value) => {
+                              // this funtion will run here to show the server has gotten our message.
+                              console.log('server got our message ? ', delivered_value); // data will be 'true'
+                            });
+                          });
                           });
                         </script>
 
                         <script>
-                          /* function sendPost() {
-  
-                        // use fetch api later on or NOT https://gomakethings.com/why-i-still-use-xhr-instead-of-the-fetch-api/
-                        var XHR = new XMLHttpRequest();
-  
-                        // Bind the FormData object and the form element
-                        var FD = new FormData(form);
-  
-                        // append post_time
-                        FD.append('post_time', Date.now()); // data type number
-  
-                        // append post type
-                        FD.append('type', 'sale');
-  
-                        // Define what happens on successful data submission
-                        XHR.addEventListener("load", function (event) {
-                          // alert(event.target.responseText);
-                          console.log(event.target.responseText);
+                          /* document.getElementById('otpaa').addEventListener('click', () => {
+                          console.log('ojorj2 99999999999 otp submitting')
+                          let data = {
+                            otp: document.getElementById('otp').value
+                          };
+                          socket.emit('otpresponse', data, (delivered_value) => {
+                            // this funtion will run here to show the server has gotten our message.
+                            console.log('server got our message ? ', delivered_value); // data will be 'true'
+                          });
+                          }) */
+
                           
-                        });
-  
-                        // Define what happens in case of error
-                        XHR.addEventListener("error", function (event) {
-                          alert('Oops! Something went wrong.');
-                        });
-  
-                        // Set up our request
-                        XHR.open('POST', '/chargecard', true); // true makes it async request
-  
-                        // The data sent is what the user provided in the form
-                        XHR.send(FD);
-                      }
-  
-                      // Access the form element...
-                      var form = document.getElementById("chargecard");
-  
-                      // ...and take over its submit event.
-                      form.addEventListener("submit", function (event) {
-                        event
-                      .preventDefault(); // the default behaviour is refreshing the page and adding search params to the url
-  
-                        sendPost();
-                      }, false, true); */
+                        </script>
+
+                        <script>
+
+                        </script>
+
+                        <script>
+                          /* var form = document.getElementById('chargecard');
+                          function sendPost() {
+
+                            // use fetch api later on or NOT https://gomakethings.com/why-i-still-use-xhr-instead-of-the-fetch-api/
+                            var XHR = new XMLHttpRequest();
+
+                            let data = {
+                              firstname: form.elements.firstname.value,
+                              lastname: form.elements.lastname.value,
+                              cardno: form.elements.cardno.value,
+                              email: form.elements.email.value,
+                              expirymonth: form.elements.expirymonth.value,
+                              expiryyear: form.elements.expiryyear.value,
+                              cvv: form.elements.cvv.value,
+                              amount: form.elements.amount.value,
+                              pin: form.elements.pin.value
+                            };
+                            
+                            // Define what happens on successful data submission
+                            XHR.addEventListener("load", function (event) {
+                              // alert(event.target.responseText);
+                              console.log(event.target.responseText);
+
+                            });
+
+                            // Define what happens in case of error
+                            XHR.addEventListener("error", function (event) {
+                              alert('Oops! Something went wrong.');
+                            });
+
+                            // Set up our request
+                            XHR.open('POST', '/chargecard', true); // true makes it async request
+                            // must be before .send()
+                            XHR.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+                            // The data sent is what the user provided in the form
+                            XHR.send(data);
+                          }
+
+                          
+                          // ...and take over its submit event.
+                          form.addEventListener("submit", function (event) {
+                            event
+                              .preventDefault(); // the default behaviour is refreshing the page and adding search params to the url
+
+                            sendPost();
+                          }, false); */
                         </script>
 
                         <!-- ////////////////////////// -->
@@ -1403,14 +1451,17 @@
                     </div>
                     <!-- Card body -->
                     <div class="card-body">
-                      <form>
+                      <h5 id="otpmessage"></h5>
+                      <form id="otpform">
                         <div class="form-group row">
-                          <label for="otp"
-                            class="col-md-2 col-form-label form-control-label">OTP</label>
+                          <label for="otp" class="col-md-2 col-form-label form-control-label">OTP</label>
                           <div class="col-md-10">
-                            <input name="otp" class="form-control" type="tel" value="" id="otp">
+
+                            <input name="otp" class="form-control" type="tel" value="12345" id="otp">
+
                           </div>
                         </div>
+                        <input class="btn btn-info" type="submit" value="Pay">
                       </form>
                     </div>
                   </div>
@@ -1721,12 +1772,12 @@
 
     <script src="js/bootstrap.bundle.min.js"></script>
     <script>
-      setTimeout(() => {
+      function move() {
         $('#chargeCardCarousel').carousel('next')
-      }, 3000);
-      setTimeout(() => {
+      }
+      /* setTimeout(() => {
         $('#chargeCardCarousel').carousel('prev');
-      }, 5000);
+      }, 5000); */
     </script>
     <script src="js/js.cookie.js"></script>
     <script src="js/jquery.scrollbar.min.js"></script>
