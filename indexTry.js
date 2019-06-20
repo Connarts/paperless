@@ -187,6 +187,19 @@ app.get('/cards', function (req, res) {
     res.sendFile(__dirname + '/cards.html');
 });
 
+app.get('/logout', function (req, res) {
+    //
+    console.log('logout for ', req.session.id, req.session.phonenumber);
+    req.session.loggedin = false;
+    req.session.destroy(function (err) {
+      // cannot access session here
+      console.log('session destroyed');
+    });
+    res.redirect('/');
+  
+});
+
+
 app.post('/register', bodyParser.urlencoded({ extended: true/* , type: 'application/x-www-form-urlencoded' */ }), function (req, res) {
     console.log('what we got: ', req.body);
     var sqlquery = "INSERT INTO people( phone_number, password, email) VALUES ('" + req.body.phonenumber + "', '" + req.body.password + "', '" + (req.body.email ? req.body.email : '') + "')";
@@ -282,7 +295,7 @@ payers.on('connection', function (socket) {
         }).catch(err => {
             console.log('\nerr', err);
         })
-        fn('woot ' , name , data);
+        fn(true); // send 'true', i.e. we got the message
     });
 
     socket.on('otpresponse', (data, name, fn) => {
@@ -291,10 +304,14 @@ payers.on('connection', function (socket) {
             "transaction_reference": socket.resp.data.flwRef,
             "otp": data.otp
         }).then(response => {
-            console.log('\n\n\t==',response.body, '\n\n\n.tx:', response.body.data.tx);
+            console.log('\n\n\t==',response.body, '\n\n\n.tx:', response.body.data.tx); // response.body.data.tx.chargeToken.embed_token
+
+            // fullName = firstname + lastname
+            console.log('save a card [acutally save to db]', response.body.data.tx.chargeToken.embed_token, '&', response.body.data.tx.customer.email, response.body.data.tx.currency, response.body.data.tx.customer.fullName, response.body.data.tx.customer.phone);
             if (response.body.status == 'success' && response.body.data.data.responsemessage == "successful") {
                 console.log('we just got paid !');
                 socket.emit('paid', { message: 'Successful payment' });
+                // save card details to bill later
             }
 
         });

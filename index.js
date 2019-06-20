@@ -229,7 +229,7 @@ app.get('/logout', function (req, res) {
     });
     res.redirect('/');
   
-  });
+});
 
 app.post('/register', bodyParser.urlencoded({ extended: true/* , type: 'application/x-www-form-urlencoded' */ }), function (req, res) {
     console.log('what we got: ', req.body);
