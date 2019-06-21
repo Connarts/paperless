@@ -12,9 +12,9 @@
 
 // for ravesandbox.flutterwave.com
 
-// FLWSECK-26e7c0b3aa54290f3359c127701a1640-X
-
 // FLWPUBK-9cd4c40991322af027613870bc4af472-X
+
+// FLWSECK-26e7c0b3aa54290f3359c127701a1640-X
 
 // 26e7c0b3aa546f209678029c
 
@@ -192,11 +192,11 @@ app.get('/logout', function (req, res) {
     console.log('logout for ', req.session.id, req.session.phonenumber);
     req.session.loggedin = false;
     req.session.destroy(function (err) {
-      // cannot access session here
-      console.log('session destroyed');
+        // cannot access session here
+        console.log('session destroyed');
     });
     res.redirect('/');
-  
+
 });
 
 
@@ -264,7 +264,8 @@ app.post('/login', bodyParser.urlencoded({ extended: true }), function (req, res
 var payers = io.of('/');
 payers.on('connection', function (socket) {
     socket.on('chargecard', (data, name, fn) => {
-        
+        socket.phonenumber = data.phonenumber;
+        socket.tempcardno = data.cardno;
         rave.Card.charge(
             {
                 "cardno": data.cardno,
@@ -304,7 +305,7 @@ payers.on('connection', function (socket) {
             "transaction_reference": socket.resp.data.flwRef,
             "otp": data.otp
         }).then(response => {
-            console.log('\n\n\t==',response.body, '\n\n\n.tx:', response.body.data.tx); // response.body.data.tx.chargeToken.embed_token
+            console.log('\n\n\t==', response.body, '\n\n\n.tx:', response.body.data.tx); // response.body.data.tx.chargeToken.embed_token
 
             // fullName = firstname + lastname
             console.log('save a card [acutally save to db]', response.body.data.tx.chargeToken.embed_token, '&', response.body.data.tx.customer.email, response.body.data.tx.currency, response.body.data.tx.customer.fullName, response.body.data.tx.customer.phone);
@@ -312,11 +313,61 @@ payers.on('connection', function (socket) {
                 console.log('we just got paid !');
                 socket.emit('paid', { message: 'Successful payment' });
                 // save card details to bill later
+                // save to db --put picture in different columns // increse packet size for media (pixs and vids)                                                                                                                & when using pool.escape(data.text), there's no need for the enclosing single quotes                 incase the user has ' or any funny characters
+                pool.query("INSERT INTO saved_cards( card_fullname, card_phone_number, phone_number, card_email, card_embed_token, card_currency, card_number) VALUES ('" + response.body.data.tx.customer.fullName + "', '" + response.body.data.tx.customer.phone + "', '" + socket.phonenumber + "', " + pool.escape(response.body.data.tx.customer.email) + ", " + pool.escape(response.body.data.tx.chargeToken.embed_token) + ", '" + response.body.data.tx.currency + "', '" + socket.tempcardno + "')", function (error, results, fields) {
+
+                    if (error) throw error;
+
+                    if (results.affectedRows === 1) {
+                        console.info('saved new card to db successfully');
+                    }
+                });
+
+                fn('we got paid woot ', name, data);
             }
 
         });
-        fn('woot ' , name , data);
+        
     });
+
+
+    socket.on('createvirtualcard', (data, name, fn) => {
+        console.log('got v c', data)
+        var newvirtualcard_options = {
+            url: "https://ravesandboxapi.flutterwave.com/v2/services/virtualcards/new",
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: {
+                "secret_key": "FLWSECK-26e7c0b3aa54290f3359c127701a1640-X",
+                "currency": "NGN", // (data.billingcurrency ? 'NGN' : 'USD'), // "NGN", // || "USD",
+                "amount": "100", // (data.billingcurrency ? '132090' : '102320'), // "100", // 10 USD = 100 NGN [NGN max is  1,000,000]
+                "billing_name": data.billing_name,
+                "billing_address": data.billing_address,
+                "billing_city": data.billing_city,
+                "billing_state": data.billing_state,
+                "billing_postal_code": data.billing_postal_code,
+                "billing_country": data.billing_country, // "NG", // || "US",
+                "callback_url": "https://paperless.com.ng"
+            },
+            json: true
+        }
+    
+        request(newvirtualcard_options)
+            .then((result) => {
+                // note Capitalized Status 
+                // result.Status == "fail"; // 200 Failed callback when a card is used
+                // result.Status == "Successful" || "success"; // 200 OK [Card created successfully, save the response to database]
+    
+                // resolve(result);
+                console.log('good success [virtual card]', result);
+            }).catch((err) => {
+                // reject(err);
+                console.log('bad report [virtual card]', err);
+            });
+    })
 });
 app.post('/chargecard', function (req, res) {
     console.log('\n\nthe message:', req.body, `and phone number ${req.session.phonenumber}`);
@@ -442,7 +493,7 @@ function fundVirtualCard(id, amount, debit_currency) { // This is id returned fo
             "id": id, // "660bae3b-333c-410f-b283-2d181587247f",
             "amount": amount, // "20",
             "debit_currency": debit_currency, // "NGN" || "USD",
-            "secret_key": "FLWSECK-e6db11d1f8a6208de8cb2f94e293450e-X"
+            "secret_key": "FLWSECK-26e7c0b3aa54290f3359c127701a1640-X"
         },
         json: true
     }
@@ -472,7 +523,7 @@ function fetchCardTransactions(id, begin_date, end_date, debit_currency) { // Th
             "PageIndex": 0,
             "PageSize": 20,
             "CardId": id, // "105c55f1-b69f-4915-b8e1-d2f645cd9955",
-            "secret_key": "FLWSECK-xxxxxxxxxxxxxxxxxxxxxxxx-X"
+            "secret_key": "FLWSECK-26e7c0b3aa54290f3359c127701a1640-X"
         },
         json: true
     }
@@ -496,7 +547,7 @@ function getVirtualCard(id) { // This is id returned for the card. You can pick 
             'Accept': 'application/json'
         },
         body: {
-            "secret_key": "FLWSECK-e6db11d1f8a6208de8cb2f94e293450e-X",
+            "secret_key": "FLWSECK-26e7c0b3aa54290f3359c127701a1640-X",
             "id": id // "660bae3b-333c-410f-b283-2d181587247f"
         },
         json: true
