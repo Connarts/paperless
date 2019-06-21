@@ -343,7 +343,7 @@ payers.on('connection', function (socket) {
             body: {
                 "secret_key": "FLWSECK-26e7c0b3aa54290f3359c127701a1640-X",
                 "currency": "NGN", // (data.billingcurrency ? 'NGN' : 'USD'), // "NGN", // || "USD",
-                "amount": "100", // (data.billingcurrency ? '132090' : '102320'), // "100", // 10 USD = 100 NGN [NGN max is  1,000,000]
+                "amount": "0", // (data.billingcurrency ? '132090' : '102320'), // "100", // 10 USD = 100 NGN [NGN max is  1,000,000]
                 "billing_name": data.billing_name,
                 "billing_address": data.billing_address,
                 "billing_city": data.billing_city,
