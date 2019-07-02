@@ -30,7 +30,9 @@
   },
   "homepage": "https://github.com/Connarts/paperless#readme",
   "dependencies": {
+    "browser_fingerprint": "^1.0.4",
     "express": "^4.16.4",
+    "express-fingerprint": "^1.1.3",
     "express-ip": "^1.0.3",
     "express-session": "^1.16.1",
     "md5": "^2.2.1",

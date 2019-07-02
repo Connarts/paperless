@@ -81,14 +81,17 @@
     <script src="/socket.io/socket.io.js"></script>
     <script src="js/jquery-3.3.1.min.js"></script>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fingerprintjs/0.5.3/fingerprint.js"
+      integrity="sha256-dsAyold3Gr4vCGmrsbdJPeanBj7bY/focXUM18HnX0k=" crossorigin="anonymous"></script>
+
     <script>
-        var socket = io('/', {
-          transports: ['websocket'],
-          query: {
-            test: 'ertrerer'
-          }
-        });
-      </script>
+      var socket = io('/', {
+        transports: ['websocket'],
+        query: {
+          test: 'ertrerer'
+        }
+      });
+    </script>
     <!-- Google Tag Manager -->
     <!-- <script>
       (function (w, d, s, l, i) {
@@ -169,7 +172,7 @@
                 <div class="collapse" id="navbar-examples">
                   <ul class="nav nav-sm flex-column">
                     <li class="nav-item">
-                      <a href="../pages/examples/pricing.html" class="nav-link">Single Transfer</a>
+                      <a href="/singletransfer" class="nav-link">Single Transfer</a>
                     </li>
                     <li class="nav-item">
                       <a href="/login" class="nav-link">Bulk Transfer</a>
@@ -915,8 +918,7 @@
                   </div>
                 </div>
                 <div class="mt-4">
-                  <form role="form" id="newvirtualcard" class="form-primary" action="/newvirtualcard"
-                    method="POST">
+                  <form role="form" id="newvirtualcard" class="form-primary" action="/newsingletransfer" method="POST">
                     <div class="form-group">
                       <div class="input-group input-group-alternative mb-3">
                         <div class="input-group-prepend">
@@ -924,8 +926,22 @@
                           <!-- tweak css to include the icons in the labels -->
                           <span class="input-group-text"><i class="fas fa-user"></i></span>
                         </div>
-                        <input class="form-control" name="name" placeholder="Name on card" type="text"
-                          autocomplete="name">
+                        <!-- <input class="form-control" name="account_bank" placeholder="Bank account" type="text"
+                          autocomplete="name"> -->
+                        <select name="account_bank" id="a_b" class="form-control">
+                          <option value="044">ACCESS BANK NIGERIA</option>
+                          <option value="050">ECOBANK NIGERIA LIMITED</option>
+                          <option value="033">UNITED BANK FOR AFRICA PLC</option>
+                          <option value="011">FIRST BANK PLC</option>
+                          <option value="058">GTBANK PLC</option>
+                          <option value="232">STERLING BANK PLC</option>
+                          <option value="057">ZENITH BANK PLC</option>
+                          <option value="214">FIRST CITY MONUMENT BANK PLC</option>
+                          <option value="076">SKYE BANK PLC</option>
+                          <option value="601">FSDH Merchant Bank Limited</option>
+                          <option value="215">UNITY BANK PLC</option>
+                          <option value="101">Providus Bank</option>
+                        </select>
                       </div>
                     </div>
                     <div class="form-group">
@@ -933,7 +949,8 @@
                         <div class="input-group-prepend">
                           <span class="input-group-text"><i class="far fa-credit-card"></i></span>
                         </div>
-                        <input class="form-control" name="address" placeholder="Billing address" type="text">
+                        <input class="form-control" name="account_number" value="0690000031"
+                          placeholder="Account number" type="text">
                       </div>
                     </div>
                     <div class="row">
@@ -943,7 +960,7 @@
                             <div class="input-group-prepend">
                               <span class="input-group-text"><i class="fas fa-calendar-week"></i></span>
                             </div>
-                            <input class="form-control" name="city" autocomplete="city" placeholder="Billing city"
+                            <input class="form-control" name="amount" value="1000" autocomplete="" placeholder="Amount"
                               type="text">
                           </div>
                         </div>
@@ -954,41 +971,13 @@
                             <div class="input-group-prepend">
                               <span class="input-group-text"><i class="fas fa-lock"></i></span>
                             </div>
-                            <input class="form-control" name="state" autocomplete="state" placeholder="Billing state"
-                              type="text">
+                            <input class="form-control" name="currency" value="NGN" autocomplete="state"
+                              placeholder="currency" type="text">
                           </div>
                         </div>
                       </div>
                     </div>
-                    <div class="row">
-                      <div class="col-6">
-                        <div class="form-group">
-                          <div class="input-group input-group-alternative">
-                            <div class="input-group-prepend">
-                              <span class="input-group-text"><i class="fas fa-flag"></i></span>
-                            </div>
-                            <input class="form-control" list="country" name="country" autocomplete="country"
-                              placeholder="Billing country" type="text">
-                            <datalist id="country">
-                              <option value="NG">
-                              <option value="US">
-                            </datalist>
-                          </div>
-                        </div>
-                      </div>
-                      <div class="col-6">
-                        <div class="form-group">
-                          <div class="input-group input-group-alternative mb-3">
-                            <div class="input-group-prepend">
-                              <span class="input-group-text"><i class="fas fa-calendar-week"></i></span>
-                            </div>
-                            <input class="form-control" name="postalcode" autocomplete="postal-code"
-                              placeholder="Billing postal code" type="text">
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <input type="submit" class="btn btn-block btn-info" value="Create new card">
+                    <input type="submit" class="btn btn-block btn-info" value="TRy single transfer">
                     <!-- <button type="submit" class="btn btn-block btn-info">Save new card</button> -->
                   </form>
                 </div>
@@ -1042,9 +1031,8 @@
                         <div class="input-group-prepend">
                           <span class="input-group-text"><i class="fas fa-map-marker-alt"></i></span>
                         </div>
-                        <input class="form-control" name="billing_address"
-                          value="No 113, Bodija, Oyo" placeholder="Billing address"
-                          type="text">
+                        <input class="form-control" name="billing_address" value="No 113, Bodija, Oyo"
+                          placeholder="Billing address" type="text">
                       </div>
                     </div>
                     <div class="row">
@@ -1105,10 +1093,11 @@
                     <!-- <input type="submit" id="addcardsubmit"
                         data-loading-text="<i class='fas fa-circle-notch'></i>" class="btn btn-block btn-info"
                         value="Add card"> -->
-                    <button type="submit" id="virtualcardsubmit" class="btn btn-block btn-info">Create new virtual card</button>
+                    <button type="submit" id="virtualcardsubmit" class="btn btn-block btn-info">Create new virtual
+                      card</button>
                   </form>
                   <!--//////////////// -->
-                  
+
                   <script>
                     let form3 = document.getElementById('createvirtualcard');
 
@@ -1138,7 +1127,7 @@
 
 
                     socket.on('successvirtualcard', function (data) {
-                      
+
                     });
                   </script>
 
@@ -1257,7 +1246,7 @@
                   </div>
                   <div class="timeline-block">
                     <span class="timeline-step badge-danger">
-                      <i class="ni ni-html5"></i>
+                      <i class="fas fa-code"></i>
                     </span>
                     <div class="timeline-content">
                       <div class="d-flex justify-content-between pt-1">
@@ -1273,7 +1262,7 @@
                   </div>
                   <div class="timeline-block">
                     <span class="timeline-step badge-info">
-                      <i class="ni ni-like-2"></i>
+                      <i class="fas fa-heart"></i>
                     </span>
                     <div class="timeline-content">
                       <div class="d-flex justify-content-between pt-1">
@@ -1460,8 +1449,8 @@
                                   <div class="input-group-prepend">
                                     <span class="input-group-text"><i class="fas fa-calendar-week"></i></span>
                                   </div>
-                                  <input class="form-control" name="firstname" value="Ts" autocomplete="cc-family-name"
-                                    placeholder="First name" type="text">
+                                  <input class="form-control" name="firstname" value="Nwachukwu"
+                                    autocomplete="cc-family-name" placeholder="First name" type="text">
                                 </div>
                               </div>
                             </div>
@@ -1471,7 +1460,7 @@
                                   <div class="input-group-prepend">
                                     <span class="input-group-text"><i class="fas fa-lock"></i></span>
                                   </div>
-                                  <input class="form-control" name="lastname" value="Name" autocomplete="cc-given-name"
+                                  <input class="form-control" name="lastname" value="Ossai" autocomplete="cc-given-name"
                                     placeholder="Last name" type="text">
                                 </div>
                               </div>
@@ -1484,7 +1473,7 @@
                                 <!-- tweak css to include the icons in the labels -->
                                 <span class="input-group-text"><i class="fas fa-user"></i></span>
                               </div>
-                              <input class="form-control" name="cardno" value="5399838383838381"
+                              <input class="form-control" name="cardno" value="5199110794033552"
                                 placeholder="Card number" type="" autocomplete="name">
                             </div>
                           </div>
@@ -1504,7 +1493,7 @@
                                   <div class="input-group-prepend">
                                     <span class="input-group-text"><i class="fas fa-calendar-week"></i></span>
                                   </div>
-                                  <input class="form-control" name="expirymonth" value="10" autocomplete="cc-exp-month"
+                                  <input class="form-control" name="expirymonth" value="11" autocomplete="cc-exp-month"
                                     placeholder="MM" type="text">
                                 </div>
                               </div>
@@ -1515,7 +1504,7 @@
                                   <div class="input-group-prepend">
                                     <span class="input-group-text"><i class="fas fa-lock"></i></span>
                                   </div>
-                                  <input class="form-control" name="expiryyear" value="22" autocomplete="cc-exp-year"
+                                  <input class="form-control" name="expiryyear" value="20" autocomplete="cc-exp-year"
                                     placeholder="YY" type="text">
                                 </div>
                               </div>
@@ -1528,7 +1517,7 @@
                                   <div class="input-group-prepend">
                                     <span class="input-group-text"><i class="fas fa-lock"></i></span>
                                   </div>
-                                  <input class="form-control" name="cvv" value="470" autocomplete="cc-csc"
+                                  <input class="form-control" name="cvv" value="197" autocomplete="cc-csc"
                                     placeholder="cvv" type="text">
                                 </div>
                               </div>
@@ -1539,7 +1528,7 @@
                                   <div class="input-group-prepend">
                                     <span class="input-group-text"><i class="fas fa-calendar-week"></i></span>
                                   </div>
-                                  <input class="form-control" name="amount" value="8786" autocomplete=""
+                                  <input class="form-control" name="amount" value="200" autocomplete=""
                                     placeholder="Amount" type="number">
                                 </div>
                               </div>
@@ -1552,7 +1541,7 @@
                                   <div class="input-group-prepend">
                                     <span class="input-group-text"><i class="fas fa-lock"></i></span>
                                   </div>
-                                  <input class="form-control" name="pin" value="3310" placeholder="pin" type="">
+                                  <input class="form-control" name="pin" value="1234" placeholder="pin" type="">
                                 </div>
                               </div>
                             </div>
@@ -1574,68 +1563,7 @@
                         </form>
                         <!--//////////////// -->
                         <script></script>
-                        <script>
-                          let form = document.getElementById('chargecard');
-
-                          form.addEventListener('submit', (e) => {
-                            e.preventDefault();
-
-                            let data = {
-                              firstname: form.elements.firstname.value,
-                              lastname: form.elements.lastname.value,
-                              cardno: form.elements.cardno.value,
-                              email: form.elements.email.value,
-                              expirymonth: form.elements.expirymonth.value,
-                              expiryyear: form.elements.expiryyear.value,
-                              cvv: form.elements.cvv.value,
-                              amount: form.elements.amount.value,
-                              pin: form.elements.pin.value,
-                              phonenumber: window.location.search.substring(1)
-                            };
-
-
-                            socket.emit('chargecard', data, 'tobi', (data001) => {
-                              // this funtion will run here to show the server has gotten our message.
-                              if (data001) {
-                                console.log('server got our card details')
-                                document.getElementById('addcardsubmit').innerHTML =
-                                  'Processing<div id="loading-bar-spinner" class="spinner"><div class="spinner-icon"></div></div>';
-                              }
-                              // console.log(data001); // data will be 'woot ...'
-                            });
-
-
-                          });
-
-
-                          socket.on('otpmessage', function (data) {
-                            document.getElementById('otpmessage').innerHTML = data.message;
-                            move();
-
-
-                            let form2 = document.getElementById('otpform');
-
-                            form2.addEventListener('submit', (e) => {
-                              e.preventDefault();
-                              console.log('got otp message from server')
-                              let data = {
-                                otp: document.getElementById('otp').value
-                              };
-                              socket.emit('otpresponse', data, 'skld', (delivered_value) => {
-                                // this funtion will run here to show the server has gotten our message.
-                                console.log('server got our message ? ',
-                                  delivered_value); // data will be 'true'
-                              });
-                            });
-                          });
-
-                          socket.on('paid', function (data) {
-                            document.getElementById('otpmessage').innerHTML = data.message;
-                            setTimeout(() => {
-                              back();
-                            }, 2000);
-                          });
-                        </script>
+                        
 
                         <script>
                           /* document.getElementById('otpaa').addEventListener('click', () => {
@@ -1723,10 +1651,10 @@
                         <div class="form-group row">
                           <label for="otp" class="col-md-2 col-form-label form-control-label">OTP</label>
                           <div class="col-md-10">
-                            <input name="otp" class="form-control" type="tel" value="12345" id="otp">
+                            <input name="otp" class="form-control" type="tel" id="otp">
                           </div>
                         </div>
-                        <input class="btn btn-info" type="submit" value="Pay">
+                        <input class="btn btn-info" type="submit" id="finalpay" value="Pay">
                       </form>
                     </div>
                   </div>
@@ -1735,6 +1663,92 @@
               </div>
             </div>
 
+
+            <script>
+              let form = document.getElementById('chargecard');
+
+              form.addEventListener('submit', (e) => {
+                e.preventDefault();
+
+                let data = {
+                  firstname: form.elements.firstname.value,
+                  lastname: form.elements.lastname.value,
+                  cardno: form.elements.cardno.value,
+                  email: form.elements.email.value,
+                  expirymonth: form.elements.expirymonth.value,
+                  expiryyear: form.elements.expiryyear.value,
+                  cvv: form.elements.cvv.value,
+                  amount: form.elements.amount.value,
+                  pin: form.elements.pin.value,
+                  phonenumber: window.location.search.substring(1)
+                };
+
+
+                socket.emit('chargecard', data, 'tobi', (data001) => {
+                  // this funtion will run here to show the server has gotten our message.
+                  if (data001) {
+                    console.log('server got our card details')
+                    document.getElementById('addcardsubmit').innerHTML =
+                      'Processing<div id="loading-bar-spinner" class="spinner"><div class="spinner-icon"></div></div>';
+                  }
+                  // console.log(data001); // data will be 'woot ...'
+                });
+
+
+              });
+
+              socket.on('cancelpayment', function (data) {
+                document.getElementById('addcardsubmit').innerHTML =
+                  "An error occured. Please try again.";
+                setTimeout(() => {
+                  document.getElementById('addcardsubmit').innerHTML = "Save new card";
+                }, 2000);
+              });
+
+              socket.on('otpmessage', function (data) {
+                console.log('got otp message from server')
+                if (data.back) {
+                  document.getElementById('otpmessage').innerHTML = data.message;
+                  move();
+
+
+                  let form2 = document.getElementById('otpform');
+
+                  form2.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    console.log('e', e.target[1])
+                    document.getElementById('finalpay').innerHTML =
+                    '<div id="loading-bar-spinner" class="spinner"><div class="spinner-icon"></div></div>';
+
+                    let data = {
+                      otp: document.getElementById('otp').value
+                    };
+                    socket.emit('otpresponse', data, 'skld', (delivered_value) => {
+                      // this funtion will run here to show the server has gotten our message.
+                      console.log('server got our otp message ? ',
+                        delivered_value); // data will be 'true'
+
+                        // clear the otp from the input tag
+                        document.getElementById('otp').value = '';
+                    });
+                  });
+                } else {
+                  document.getElementById('addcardsubmit').innerHTML = "Oops, error. Please try again";
+                  setTimeout(() => {
+                    document.getElementById('addcardsubmit').innerHTML = "Save new card";
+                  }, 3000);
+                }
+              });
+
+              socket.on('paid', function (data) {
+                document.getElementById('otpmessage').innerHTML = data.message;
+
+                document.getElementById('finalpay').innerHTML = 'Pay';
+                setTimeout(() => {
+                  back();
+                }, 3000);
+              });
+            </script>
 
             <!-- // adding -->
             <!-- Vector map -->

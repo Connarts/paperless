@@ -49,6 +49,7 @@ var isEmpty = function (data) {
 const forge = require('node-forge');
 const request = require('request-promise-native');
 const md5 = require('md5');
+var Fingerprint = require('express-fingerprint');
 var mysql = require('mysql');
 var pool = mysql.createPool({
     connectionLimit: 15, // Default: 0
@@ -66,8 +67,8 @@ pool.on('acquire', function (connection) {
 
 var Ravepay = require('ravepay');
 
-var rave = new Ravepay('FLWPUBK-9cd4c40991322af027613870bc4af472-X', 'FLWSECK-26e7c0b3aa54290f3359c127701a1640-X', false);
-// var rave = new Rave('FLWPUBK-9cd4c40991322af027613870bc4af472-X', 'FLWSECK-26e7c0b3aa54290f3359c127701a1640-X');
+var rave = new Ravepay('FLWPUBK-cf2b3d8af1418e72ecb501098eba6074-X', 'FLWSECK-4f372a1a310358710fc145f40748126b-X', true);
+// var rave = new Rave('FLWPUBK-9cd4c40991322af027613870bc4af472-X', 'FLWSECK-26e7c0b3aa54290f3359c127701a1640-X', false);
 
 var bodyParser = require('body-parser');
 var morgan = require('morgan');
@@ -76,6 +77,7 @@ var http = require('http');
 var bodyParser = require('body-parser');
 var session = require('express-session');
 var app = express();
+app.use(Fingerprint());
 app.use(session({
     secret: '"xiooi-=-[W$##%%]$NDJ&("]]csd90',
     resave: false,
@@ -119,6 +121,20 @@ app.locals.title = 'paperless';
 app.locals.email = 'chuks@paperless.com.ng';
 // => 'me@myapp.com'
 
+
+const BrowserFingerprint = require('browser_fingerprint')
+// these are the default options
+const options = {
+    cookieKey: '__browser_fingerprint',
+    toSetCookie: true,
+    onlyStaticElements: true,
+    settings: {
+      path: '/',
+      expires: 3600000,
+      httpOnly: null
+    }
+  }
+const fingerprinter = new BrowserFingerprint(options)
 var server = http.Server(app);
 
 server.listen(60581, function () { // auto change port if port is already in use, handle error gracefully
@@ -127,6 +143,7 @@ server.listen(60581, function () { // auto change port if port is already in use
 
 // io connects to the server
 var io = require('socket.io')(server);
+
 
 
 app.get('/', function (req, res) {
@@ -187,6 +204,12 @@ app.get('/cards', function (req, res) {
     res.sendFile(__dirname + '/cards.html');
 });
 
+app.get('/singletransfer', function (req, res) {
+    res.type('html');
+    res.contentType('*/*');
+    res.sendFile(__dirname + '/pricing.html');
+});
+
 app.get('/logout', function (req, res) {
     //
     console.log('logout for ', req.session.id, req.session.phonenumber);
@@ -222,7 +245,7 @@ app.post('/login', bodyParser.urlencoded({ extended: true }), function (req, res
     // handle post request, validate data with database.
     // how to handle wrong password with right email or more rearly, right password and wrong password.
 
-    console.log('seeing ...', req.body.phonenumber, req.body.password);
+    console.log('seeing req.fingerprint...', req.fingerprint);
     var sqlquery = `SELECT * FROM people WHERE phone_number = '${req.body.phonenumber}' AND password = '${req.body.password}' `;
     pool.query(sqlquery, function (error1, results1, fields1) {
 
@@ -262,7 +285,12 @@ app.post('/login', bodyParser.urlencoded({ extended: true }), function (req, res
 
 
 var payers = io.of('/');
+/* payers.use((socket, err_or_next) => { //  const agent = _useragent2.default.parse(this.req.headers['user-agent']);
+    Fingerprint({req: socket.request})
+}) */
 payers.on('connection', function (socket) {
+    let {fingerprint, elementHash, headersHash} = fingerprinter.fingerprint(socket.request)
+    console.log('\n\n-req.fingerprint:', fingerprint)
     socket.on('chargecard', (data, name, fn) => {
         socket.phonenumber = data.phonenumber;
         socket.tempcardno = data.cardno;
@@ -284,14 +312,52 @@ payers.on('connection', function (socket) {
                 "txRef": "MC-" + Date.now(),
                 "redirect_url": "https://rave-webhook.herokuapp.com/receivepayment",
                 "meta": [{ metaname: "flightID", metavalue: "123949494DC" }],
-                "device_fingerprint": "N/A",
+                "device_fingerprint": fingerprint, //"N/A",
             }
         ).then(resp => {
             console.log('>>> resp.body', resp.body);
-            socket.resp = resp.body;
-            // resp.body.data.chargeResponseMessage
-            // res.status(200).send(resp.body.data.chargeResponseMessage);
-            socket.emit('otpmessage', { message: resp.body.data.chargeResponseMessage });
+            if (resp.body.status === 'success' && resp.body.message === 'AUTH_SUGGESTION' && resp.body.data.suggested_auth === 'PIN') {
+                rave.Card.charge(
+                    {
+                        "cardno": data.cardno,
+                        "cvv": data.cvv,
+                        "expirymonth": data.expirymonth,
+                        "expiryyear": data.expiryyear,
+                        "currency": "NGN",
+                        "country": "NG",
+                        "amount": data.amount, // "1000",
+                        "email": data.email, // "nwachukwuossai@gmail.com",
+                        "suggested_auth": "PIN",
+                        "pin": data.pin, // "3310",
+                        "phonenumber": data.phonenumber, // "09055469670",
+                        "firstname": data.firstname, // "temi",
+                        "lastname": data.lastname, // "desola",
+                        "IP": /* socket.request.header['x-forwarded-for'] || */ socket.request.connection.remoteAddress,
+                        "txRef": "MC-" + Date.now(),
+                        "redirect_url": "https://rave-webhook.herokuapp.com/receivepayment",
+                        "meta": [{ metaname: "flightID", metavalue: "123949494DC" }],
+                        "device_fingerprint": fingerprint //"N/A",
+                    }
+                ).then(resp => {
+                    console.log('>>> resp.body', resp.body);
+                    socket.resp = resp.body;
+                    // resp.body.data.chargeResponseMessage
+                    // res.status(200).send(resp.body.data.chargeResponseMessage);
+                    if (resp.body.data.chargeResponseCode = '02') {
+                        console.log('\nresp.body.data.tx.chargeResponseCode:', resp.body.data.chargeResponseCode)
+                        socket.emit('otpmessage', { message: resp.body.data.chargeResponseMessage, back: true });
+                    } else if (resp.body.data.chargeResponseCode = '00'){
+                        socket.emit('otpmessage', { message: resp.body.data.chargeResponseMessage, back: false });
+                    }
+                    
+        
+                }).catch(err => {
+                    console.log('\nerr', err);
+                    // if error, send cancel the processing loader
+                    socket.emit('cancelpayment', true);
+                })
+            }
+            
 
         }).catch(err => {
             console.log('\nerr', err);
@@ -308,13 +374,21 @@ payers.on('connection', function (socket) {
             console.log('\n\n\t==', response.body, '\n\n\n.tx:', response.body.data.tx); // response.body.data.tx.chargeToken.embed_token
 
             // fullName = firstname + lastname
+            if (response.body.data.tx.vbvrespmessage != 'N/A') {
+                console.log('\nresponse.body.data.tx.vbvrespmessage:', response.body.data.tx.vbvrespmessage)
+                socket.emit('paid', { message: response.body.data.tx.vbvrespmessage });
+            }
+            
             console.log('save a card [acutally save to db]', response.body.data.tx.chargeToken.embed_token, '&', response.body.data.tx.customer.email, response.body.data.tx.currency, response.body.data.tx.customer.fullName, response.body.data.tx.customer.phone);
             if (response.body.status == 'success' && response.body.data.data.responsemessage == "successful") {
                 console.log('we just got paid !');
                 socket.emit('paid', { message: 'Successful payment' });
                 // save card details to bill later
-                // save to db --put picture in different columns // increse packet size for media (pixs and vids)                                                                                                                & when using pool.escape(data.text), there's no need for the enclosing single quotes                 incase the user has ' or any funny characters
-                pool.query("INSERT INTO saved_cards( card_fullname, card_phone_number, phone_number, card_email, card_embed_token, card_currency, card_number) VALUES ('" + response.body.data.tx.customer.fullName + "', '" + response.body.data.tx.customer.phone + "', '" + socket.phonenumber + "', " + pool.escape(response.body.data.tx.customer.email) + ", " + pool.escape(response.body.data.tx.chargeToken.embed_token) + ", '" + response.body.data.tx.currency + "', '" + socket.tempcardno + "')", function (error, results, fields) {
+                // save to db --put picture in different columns // increse packet size for media (pixs and vids)
+
+                // & when using pool.escape(data.text), there's no need for the enclosing single quotes                 incase the user has ' or any funny characters
+                var qu = "INSERT INTO saved_cards( card_fullname, card_phone_number, phone_number, card_email, card_embed_token, card_currency, card_number) VALUES ('" + response.body.data.tx.customer.fullName + "', '" + response.body.data.tx.customer.phone + "', '" + socket.phonenumber + "', " + pool.escape(response.body.data.tx.customer.email) + ", " + pool.escape(response.body.data.tx.chargeToken.embed_token) + ", '" + response.body.data.tx.currency + "', '" + socket.tempcardno + "')";
+                pool.query(qu, function (error, results, fields) {
 
                     if (error) throw error;
 
@@ -334,23 +408,23 @@ payers.on('connection', function (socket) {
     socket.on('createvirtualcard', (data, name, fn) => {
         console.log('got v c', data)
         var newvirtualcard_options = {
-            url: "https://ravesandboxapi.flutterwave.com/v2/services/virtualcards/new",
+            url: "https://api.ravepay.co/v2/services/virtualcards/new",
             method: "POST",
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'
             },
             body: {
-                "secret_key": "FLWSECK-26e7c0b3aa54290f3359c127701a1640-X",
+                "secret_key": "FLWSECK-4f372a1a310358710fc145f40748126b-X", // FLWSECK-26e7c0b3aa54290f3359c127701a1640-X
                 "currency": "NGN", // (data.billingcurrency ? 'NGN' : 'USD'), // "NGN", // || "USD",
-                "amount": "0", // (data.billingcurrency ? '132090' : '102320'), // "100", // 10 USD = 100 NGN [NGN max is  1,000,000]
+                "amount": "100", // (data.billingcurrency ? '132090' : '102320'), // "100", // 10 USD = 100 NGN [NGN max is  1,000,000]
                 "billing_name": data.billing_name,
                 "billing_address": data.billing_address,
                 "billing_city": data.billing_city,
                 "billing_state": data.billing_state,
                 "billing_postal_code": data.billing_postal_code,
                 "billing_country": data.billing_country, // "NG", // || "US",
-                "callback_url": "https://paperless.com.ng"
+                "callback_url": "https://paperless.com.ng/heer"
             },
             json: true
         }
@@ -480,6 +554,50 @@ app.post('/createvirtualcard', bodyParser.urlencoded({ extended: true/* , type: 
     res.redirect(req.headers.referer.substring(22));
     // res.send('okay');
 });
+
+app.post('/newsingletransfer', bodyParser.urlencoded({ extended: true}), function (req, res) {
+    console.log('\n\ntransfer', req.body);
+
+    request({
+        url: "https://ravesandboxapi.flutterwave.com/flwv3-pug/getpaidx/api/flwpbf-banks.js?json=1",
+        method: "GET",
+        headers: {
+            'Content-Type': 'application/json',
+            // 'Accept': 'application/json'
+        },
+        body: {
+        },
+        json: true
+    })
+        .then((result) => {
+
+            // resolve(result);
+            console.log('good success[bank list]', result);
+        }).catch((err) => {
+            // reject(err);
+            console.log('bad report[bank list]', err);
+        });
+
+    rave.Transfer.initiate(
+        {
+            "account_bank": req.body.account_bank,
+            "account_number": req.body.account_number,
+            "amount": req.body.amount,
+            "narration": "New transfer",
+            "currency": req.body.currency,
+            "seckey": "FLWSECK-26e7c0b3aa54290f3359c127701a1640-X",
+            "reference": "ref-" + Date.now() // something so descriptive like who and to whom
+            // "beneficiary_name": "Kwame Adew" // only pass this for non NGN
+        }
+    ).then(resp => {
+        console.log('\n\n(((((((((((((((()))))))))))))))))))))))))\n\n', resp.body);
+        
+    }).catch(err => {
+        console.log(err);
+        
+    })
+    res.status(200).send('something');
+})
 
 function fundVirtualCard(id, amount, debit_currency) { // This is id returned for the card. You can pick this up from the Create a Virtual Card API response.
     var fundvirtualcard_options = {
@@ -639,3 +757,10 @@ function chargeBankAccount(params) {
 app.use(function (req, res, next) {
     res.status(404).send("Sorry can't find that! Go back")
 });
+
+/**
+ * I can't create virtual cards with test keys
+ * 
+ * when ever I use the test keys from https://ravesandbox.flutterwave.com/dashboard to create a new virtual card, it always returns { Status: 'fail',
+  Message: 'One or more field failed validation' }
+ */
