@@ -290,8 +290,11 @@ var payers = io.of('/');
 }) */
 payers.on('connection', function (socket) {
     let {fingerprint, elementHash, headersHash} = fingerprinter.fingerprint(socket.request)
-    console.log('\n\n-req.fingerprint:', fingerprint)
+    // console.log('\n\n-req.fingerprint:', fingerprint)
+    
     socket.on('chargecard', (data, name, fn) => {
+        console.log('\n\nfingerprint:', data.device_fingerprint)
+        console.log('\n\ndata:', data)
         socket.phonenumber = data.phonenumber;
         socket.tempcardno = data.cardno;
         rave.Card.charge(
@@ -309,10 +312,10 @@ payers.on('connection', function (socket) {
                 "firstname": data.firstname, // "temi",
                 "lastname": data.lastname, // "desola",
                 "IP": /* socket.request.header['x-forwarded-for'] || */ socket.request.connection.remoteAddress,
-                "txRef": "MC-" + Date.now(),
-                "redirect_url": "https://rave-webhook.herokuapp.com/receivepayment",
-                "meta": [{ metaname: "flightID", metavalue: "123949494DC" }],
-                "device_fingerprint": fingerprint, //"N/A",
+                "txRef": "SaveCard-" + Date.now(),
+                "redirect_url": "connarts.com.ng", // "https://rave-webhook.herokuapp.com/receivepayment",
+                "meta": [{ metaname: "save card", metavalue: `${data.amount} by ${data.phonenumber}` }],
+                "device_fingerprint": data.device_fingerprint, //"N/A",
             }
         ).then(resp => {
             console.log('>>> resp.body', resp.body);
@@ -333,10 +336,10 @@ payers.on('connection', function (socket) {
                         "firstname": data.firstname, // "temi",
                         "lastname": data.lastname, // "desola",
                         "IP": /* socket.request.header['x-forwarded-for'] || */ socket.request.connection.remoteAddress,
-                        "txRef": "MC-" + Date.now(),
-                        "redirect_url": "https://rave-webhook.herokuapp.com/receivepayment",
-                        "meta": [{ metaname: "flightID", metavalue: "123949494DC" }],
-                        "device_fingerprint": fingerprint //"N/A",
+                        "txRef": "SaveCard-" + Date.now(),
+                        "redirect_url": "connarts.com.ng", //"https://rave-webhook.herokuapp.com/receivepayment",
+                        "meta": [{ metaname: "save card", metavalue: `${data.amount} by ${data.phonenumber}` }],
+                        "device_fingerprint": data.device_fingerprint //"N/A",
                     }
                 ).then(resp => {
                     console.log('>>> resp.body', resp.body);
@@ -344,7 +347,11 @@ payers.on('connection', function (socket) {
                     // resp.body.data.chargeResponseMessage
                     // res.status(200).send(resp.body.data.chargeResponseMessage);
                     if (resp.body.data.chargeResponseCode = '02') {
-                        console.log('\nresp.body.data.tx.chargeResponseCode:', resp.body.data.chargeResponseCode)
+                        console.log('\nresp.body.data.chargeResponseCode:', resp.body.data.chargeResponseCode)
+
+                        console.log('\nresp.body.data.chargeResponseMessage:', resp.body.data.chargeResponseMessage)
+                        console.log('\nresp.body.data.tx.chargeResponseMessage:', ( resp.body.data.tx ? resp.body.data.tx.chargeResponseMessage : 'undefined. means it\'s kinda working' ))
+
                         socket.emit('otpmessage', { message: resp.body.data.chargeResponseMessage, back: true });
                     } else if (resp.body.data.chargeResponseCode = '00'){
                         socket.emit('otpmessage', { message: resp.body.data.chargeResponseMessage, back: false });
@@ -361,6 +368,8 @@ payers.on('connection', function (socket) {
 
         }).catch(err => {
             console.log('\nerr', err);
+            // if error, send cancel the processing loader
+            socket.emit('cancelpayment', true);
         })
         fn(true); // send 'true', i.e. we got the message
     });
@@ -380,7 +389,7 @@ payers.on('connection', function (socket) {
             }
             
             console.log('save a card [acutally save to db]', response.body.data.tx.chargeToken.embed_token, '&', response.body.data.tx.customer.email, response.body.data.tx.currency, response.body.data.tx.customer.fullName, response.body.data.tx.customer.phone);
-            if (response.body.status == 'success' && response.body.data.data.responsemessage == "successful") {
+            if (response.body.status == 'success' && response.body.data.data.responsecode == "00") {
                 console.log('we just got paid !');
                 socket.emit('paid', { message: 'Successful payment' });
                 // save card details to bill later
