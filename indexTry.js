@@ -27,7 +27,6 @@ var isEmpty = function (data) {
 const forge = require('node-forge');
 const request = require('request-promise-native');
 const md5 = require('md5');
-var Fingerprint = require('express-fingerprint');
 var mysql = require('mysql');
 var pool = mysql.createPool({
     connectionLimit: 15, // Default: 0
@@ -54,7 +53,6 @@ var http = require('http');
 var bodyParser = require('body-parser');
 var session = require('express-session');
 var app = express();
-app.use(Fingerprint());
 app.use(session({
     secret: '"xiooi-=-[W$##%%]$NDJ&("]]csd90',
     resave: false,
@@ -62,8 +60,6 @@ app.use(session({
 }));
 app.enable('trust proxy', true);
 
-const expressip = require('express-ip');
-app.use(expressip().getIpInfoMiddleware);
 // set morgan to log info about our requests for development use.
 // app.use(morgan('dev'));
 
@@ -99,19 +95,6 @@ app.locals.email = 'chuks@paperless.com.ng';
 // => 'me@myapp.com'
 
 
-const BrowserFingerprint = require('browser_fingerprint')
-// these are the default options
-const options = {
-    cookieKey: '__browser_fingerprint',
-    toSetCookie: true,
-    onlyStaticElements: true,
-    settings: {
-      path: '/',
-      expires: 3600000,
-      httpOnly: null
-    }
-  }
-const fingerprinter = new BrowserFingerprint(options)
 var server = http.Server(app);
 
 server.listen(60581, function () { // auto change port if port is already in use, handle error gracefully
@@ -222,7 +205,6 @@ app.post('/login', bodyParser.urlencoded({ extended: true }), function (req, res
     // handle post request, validate data with database.
     // how to handle wrong password with right email or more rearly, right password and wrong password.
 
-    console.log('seeing req.fingerprint...', req.fingerprint);
     var sqlquery = `SELECT * FROM people WHERE phone_number = '${req.body.phonenumber}' AND password = '${req.body.password}' `;
     pool.query(sqlquery, function (error1, results1, fields1) {
 
@@ -266,8 +248,6 @@ var payers = io.of('/');
     Fingerprint({req: socket.request})
 }) */
 payers.on('connection', function (socket) {
-    let {fingerprint, elementHash, headersHash} = fingerprinter.fingerprint(socket.request)
-    // console.log('\n\n-req.fingerprint:', fingerprint)
     
     socket.on('chargecard', (data, name, fn) => {
         console.log('\n\nfingerprint:', data.device_fingerprint)
