@@ -1,33 +1,3 @@
-// for rave.flutterwave.com
-
-// FLWSECK_TEST-aeab0c72b5207a5c1de76023ecd73c62-X
-
-// FLWPUBK_TEST-d5a78c2b35917bfd5ae94fec1c751c57-X
-
-// FLWSECK_TEST96b1ae5fb5e0 // encryption key ??
-
-// ---------for rave.flutterwave.com
-
-/// ...we'd be using the ravesandbox for now
-
-// for ravesandbox.flutterwave.com
-
-// FLWSECK-26e7c0b3aa54290f3359c127701a1640-X
-
-// FLWPUBK-9cd4c40991322af027613870bc4af472-X
-
-// 26e7c0b3aa546f209678029c
-
-// ---------for ravesandbox.flutterwave.com
-
-/***
- * FLWPUBK-cf2b3d8af1418e72ecb501098eba6074-X
- * 
- * FLWSECK-4f372a1a310358710fc145f40748126b-X
- * 
- * 4f372a1a310382dd2d832af5 // encryption key
- */
-
 /**
  * https://stackoverflow.com/questions/679915/how-do-i-test-for-an-empty-javascript-object
  * 
@@ -140,8 +110,10 @@ class Rave {
     }
 }
 
-// var rave = new Rave('FLWPUBK_TEST-d5a78c2b35917bfd5ae94fec1c751c57-X', 'FLWSECK_TEST-aeab0c72b5207a5c1de76023ecd73c62-X');
 
+// FLWSECK-26e7c0b3aa54290f3359c127701a1640-X
+
+// FLWPUBK-9cd4c40991322af027613870bc4af472-X
 var rave = new Rave('FLWPUBK-9cd4c40991322af027613870bc4af472-X', 'FLWSECK-26e7c0b3aa54290f3359c127701a1640-X'); // sandbox
 
 var bodyParser = require('body-parser');

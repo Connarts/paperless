@@ -1,25 +1,3 @@
-// for rave.flutterwave.com
-
-// FLWSECK_TEST-aeab0c72b5207a5c1de76023ecd73c62-X
-
-// FLWPUBK_TEST-d5a78c2b35917bfd5ae94fec1c751c57-X
-
-// FLWSECK_TEST96b1ae5fb5e0
-
-// ---------for rave.flutterwave.com
-
-/// ...we'd be using the ravesandbox for now
-
-// for ravesandbox.flutterwave.com
-
-// FLWPUBK-9cd4c40991322af027613870bc4af472-X
-
-// FLWSECK-26e7c0b3aa54290f3359c127701a1640-X
-
-// 26e7c0b3aa546f209678029c
-
-// ---------for ravesandbox.flutterwave.com
-
 /**
  * https://stackoverflow.com/questions/679915/how-do-i-test-for-an-empty-javascript-object
  * 
@@ -67,8 +45,7 @@ pool.on('acquire', function (connection) {
 
 var Ravepay = require('ravepay');
 
-var rave = new Ravepay('FLWPUBK-cf2b3d8af1418e72ecb501098eba6074-X', 'FLWSECK-4f372a1a310358710fc145f40748126b-X', true);
-// var rave = new Rave('FLWPUBK-9cd4c40991322af027613870bc4af472-X', 'FLWSECK-26e7c0b3aa54290f3359c127701a1640-X', false);
+var rave = new Ravepay('FLWPUBK-9cd4c40991322af027613870bc4af472-X', 'FLWSECK-26e7c0b3aa54290f3359c127701a1640-X', false); // sandbox // public key, secret key, true
 
 var bodyParser = require('body-parser');
 var morgan = require('morgan');
@@ -424,7 +401,7 @@ payers.on('connection', function (socket) {
                 'Accept': 'application/json'
             },
             body: {
-                "secret_key": "FLWSECK-4f372a1a310358710fc145f40748126b-X", // FLWSECK-26e7c0b3aa54290f3359c127701a1640-X
+                "secret_key": "",
                 "currency": "NGN", // (data.billingcurrency ? 'NGN' : 'USD'), // "NGN", // || "USD",
                 "amount": "100", // (data.billingcurrency ? '132090' : '102320'), // "100", // 10 USD = 100 NGN [NGN max is  1,000,000]
                 "billing_name": data.billing_name,

@@ -756,7 +756,7 @@
                                     <span class="input-group-text"><i class="fas fa-calendar-week"></i></span>
                                   </div>
                                   <input class="form-control" name="firstname" value=""
-                                    autocomplete="cc-family-name" placeholder="First name" type="text">
+                                    autocomplete="cc-given-name" placeholder="First name" type="text">
                                 </div>
                               </div>
                             </div>
@@ -766,7 +766,7 @@
                                   <div class="input-group-prepend">
                                     <span class="input-group-text"><i class="fas fa-lock"></i></span>
                                   </div>
-                                  <input class="form-control" name="lastname" value="" autocomplete="cc-given-name"
+                                  <input class="form-control" name="lastname" value="" autocomplete="cc-family-name"
                                     placeholder="Last name" type="text">
                                 </div>
                               </div>
@@ -780,7 +780,7 @@
                                 <span class="input-group-text"><i class="fas fa-user"></i></span>
                               </div>
                               <input class="form-control" name="cardno" value=""
-                                placeholder="Card number" type="" autocomplete="name">
+                                placeholder="Card number" type="" autocomplete="cc-number">
                             </div>
                           </div>
                           <div class="form-group">
@@ -835,7 +835,7 @@
                                     <span class="input-group-text"><i class="fas fa-calendar-week"></i></span>
                                   </div>
                                   <input class="form-control" name="amount" value="" autocomplete=""
-                                    placeholder="Amount" type="number">
+                                    placeholder="Amount" type="tel">
                                 </div>
                               </div>
                             </div>
@@ -866,6 +866,7 @@
                                 data-loading-text="<i class='fas fa-circle-notch'></i>" class="btn btn-block btn-info"
                                 value="Add card"> -->
                           <button type="submit" id="addcardsubmit" class="btn btn-block btn-info">Save new card</button>
+                          <!-- TODO: Button to cancel transactions if request it taking too long... we show the button to cancel transactions -->
                         </form>
                         <!--//////////////// -->
                         <script></script>
