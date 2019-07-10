@@ -4,6 +4,8 @@
  * Meanwhile we can have one function that checks for all 'empties' like null, undefined, '', ' ', {}, [].
  */
 
+ // uninstall express-ip later
+
 var isEmpty = function (data) {
     if (typeof data === 'object') {
         if (JSON.stringify(data) === '{}' || JSON.stringify(data) === '[]') {
@@ -35,7 +37,7 @@ var pool = mysql.createPool({
     password: "ossai'spassword",
     database: /* 'connarts_paperless' ||  */'paperless',
     acquireTimeout: 1800000, // 10000 is 10 secs
-    multipleStatements: true // it allows for SQL injection attacks if values are not properly escaped
+    multipleStatements: true // setting value to 'true' allows for SQL injection attacks if values are not properly escaped
 });
 
 pool.on('acquire', function (connection) {
@@ -44,7 +46,7 @@ pool.on('acquire', function (connection) {
 
 var Ravepay = require('ravepay');
 
-var rave = new Ravepay('FLWPUBK-9cd4c40991322af027613870bc4af472-X', 'FLWSECK-26e7c0b3aa54290f3359c127701a1640-X', false); // sandbox // public key, secret key, true
+var rave = new Ravepay('', '', true); // public key, secret key, true
 
 var bodyParser = require('body-parser');
 var morgan = require('morgan');
@@ -390,7 +392,7 @@ payers.on('connection', function (socket) {
                 "billing_state": data.billing_state,
                 "billing_postal_code": data.billing_postal_code,
                 "billing_country": data.billing_country, // "NG", // || "US",
-                "callback_url": "https://paperless.com.ng/heer"
+                "callback_url": "https://paperless.com.ng/"
             },
             json: true
         }
@@ -403,6 +405,13 @@ payers.on('connection', function (socket) {
     
                 // resolve(result);
                 console.log('good success [virtual card]', result);
+
+                if (result.Status == 'fail') {
+                    // result.Message == 'One or more field failed validation'
+                    socket.emit('failedvirtualcard', result);
+                }
+
+                // emit successvirtualcard
             }).catch((err) => {
                 // reject(err);
                 console.log('bad report [virtual card]', err);
@@ -489,7 +498,7 @@ app.post('/createvirtualcard', bodyParser.urlencoded({ extended: true/* , type: 
             'Accept': 'application/json'
         },
         body: {
-            "secret_key": "FLWSECK-26e7c0b3aa54290f3359c127701a1640-X",
+            "secret_key": "",
             "currency": (req.body.billingcurrency ? 'NGN' : 'USD'), // "NGN", // || "USD",
             "amount": (req.body.billingcurrency ? '132090' : '102320'), // "100", // 10 USD = 100 NGN [NGN max is  1,000,000]
             "billing_name": req.body.name,
@@ -512,6 +521,8 @@ app.post('/createvirtualcard', bodyParser.urlencoded({ extended: true/* , type: 
 
             // resolve(result);
             console.log('good success', result);
+
+            // emit successvirtualcard
         }).catch((err) => {
             // reject(err);
             console.log('bad report', err);
@@ -577,7 +588,7 @@ function fundVirtualCard(id, amount, debit_currency) { // This is id returned fo
             "id": id, // "660bae3b-333c-410f-b283-2d181587247f",
             "amount": amount, // "20",
             "debit_currency": debit_currency, // "NGN" || "USD",
-            "secret_key": "FLWSECK-26e7c0b3aa54290f3359c127701a1640-X"
+            "secret_key": ""
         },
         json: true
     }
@@ -607,7 +618,7 @@ function fetchCardTransactions(id, begin_date, end_date, debit_currency) { // Th
             "PageIndex": 0,
             "PageSize": 20,
             "CardId": id, // "105c55f1-b69f-4915-b8e1-d2f645cd9955",
-            "secret_key": "FLWSECK-26e7c0b3aa54290f3359c127701a1640-X"
+            "secret_key": ""
         },
         json: true
     }
@@ -631,7 +642,7 @@ function getVirtualCard(id) { // This is id returned for the card. You can pick 
             'Accept': 'application/json'
         },
         body: {
-            "secret_key": "FLWSECK-26e7c0b3aa54290f3359c127701a1640-X",
+            "secret_key": "",
             "id": id // "660bae3b-333c-410f-b283-2d181587247f"
         },
         json: true

@@ -755,8 +755,8 @@
                                   <div class="input-group-prepend">
                                     <span class="input-group-text"><i class="fas fa-calendar-week"></i></span>
                                   </div>
-                                  <input class="form-control" name="firstname" value=""
-                                    autocomplete="cc-given-name" placeholder="First name" type="text">
+                                  <input class="form-control" name="firstname" value="" autocomplete="cc-given-name"
+                                    placeholder="First name" type="text">
                                 </div>
                               </div>
                             </div>
@@ -779,8 +779,8 @@
                                 <!-- tweak css to include the icons in the labels -->
                                 <span class="input-group-text"><i class="fas fa-user"></i></span>
                               </div>
-                              <input class="form-control" name="cardno" value=""
-                                placeholder="Card number" type="" autocomplete="cc-number">
+                              <input class="form-control" name="cardno" value="" placeholder="Card number" type=""
+                                autocomplete="cc-number">
                             </div>
                           </div>
                           <div class="form-group">
@@ -788,8 +788,7 @@
                               <div class="input-group-prepend">
                                 <span class="input-group-text"><i class="far fa-credit-card"></i></span>
                               </div>
-                              <input class="form-control" name="email" value=""
-                                placeholder="Email" type="email">
+                              <input class="form-control" name="email" value="" placeholder="Email" type="email">
                             </div>
                           </div>
                           <div class="row">
@@ -1010,7 +1009,7 @@
                   "An error occured. Please try again.";
                 setTimeout(() => {
                   document.getElementById('addcardsubmit').innerHTML = "Save new card";
-                }, 2000);
+                }, 5000);
               });
 
               socket.on('otpmessage', function (data) {
@@ -1364,7 +1363,7 @@
                           <!-- tweak css to include the icons in the labels -->
                           <span class="input-group-text"><i class="fas fa-user"></i></span>
                         </div>
-                        <input class="form-control" name="billing_name" value="Anderson Jefferson Bowen"
+                        <input class="form-control" name="billing_name" value="Jefferson Bowen"
                           placeholder="Full name on card" type="text" autocomplete="name">
                       </div>
                     </div>
@@ -1462,8 +1461,11 @@
                         if (data00) {
                           console.log('created new virtual card.')
                         }
-                        // console.log(data001); // data will be 'woot ...'
+                        console.log('from create new v c', data001); // data will be 'woot ...'
                       });
+
+                      document.getElementById('virtualcardsubmit').innerHTML =
+                        'Processing<div id="loading-bar-spinner" class="spinner"><div class="spinner-icon"></div></div>';
 
 
                     });
@@ -1471,6 +1473,14 @@
 
                     socket.on('successvirtualcard', function (data) {
 
+                    });
+
+                    socket.on('failedvirtualcard', function (data) {
+                      document.getElementById('virtualcardsubmit').innerHTML =
+                        "An error occured. Please try again.";
+                      setTimeout(() => {
+                        document.getElementById('virtualcardsubmit').innerHTML = "Create new virtual card";
+                      }, 5000);
                     });
                   </script>
 
