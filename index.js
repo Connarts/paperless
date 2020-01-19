@@ -30,10 +30,10 @@ const md5 = require('md5');
 var mysql = require('mysql');
 var pool = mysql.createPool({
     connectionLimit: 15, // Default: 0
-    host: 'localhost', // def change to connarts.com.ng before deployment
-    user: 'connarts_ossai',
-    password: "ossai'spassword",
-    database: /* 'connarts_paperless' ||  */'paperless',
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: /* process.env.DB ||  */ process.env.LOCAL_DB,
     acquireTimeout: 1800000, // 10000 is 10 secs
     multipleStatements: true // it allows for SQL injection attacks if values are not properly escaped
 });
@@ -110,11 +110,7 @@ class Rave {
     }
 }
 
-
-// FLWSECK-26e7c0b3aa54290f3359c127701a1640-X
-
-// FLWPUBK-9cd4c40991322af027613870bc4af472-X
-var rave = new Rave('FLWPUBK-9cd4c40991322af027613870bc4af472-X', 'FLWSECK-26e7c0b3aa54290f3359c127701a1640-X'); // sandbox
+var rave = new Rave(process.env.RAVE_SANDBOX_PUBLIC_KEY, process.env.RAVE_SANDBOX_SECRET_KEY); // sandbox pk, sandbox sk
 
 var bodyParser = require('body-parser');
 var morgan = require('morgan');
@@ -124,7 +120,7 @@ var bodyParser = require('body-parser');
 var session = require('express-session');
 var app = express();
 app.use(session({
-    secret: '"xiooi-=-[W$##%%]$NDJ&("]]csd90',
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: true
 }));
@@ -136,13 +132,13 @@ app.set('view engine', 'ejs');
 app.locals.title = 'paperless';
 // => 'My App'
 
-app.locals.email = 'chuks@paperless.com.ng';
+app.locals.email = process.env.APP_LOCALS_EMAIL;
 // => 'me@myapp.com'
 
 var server = http.Server(app);
 
-server.listen(60581, function () { // auto change port if port is already in use, handle error gracefully
-    console.log('node server listening on port :60581');
+server.listen(process.env.PORT, function () { // auto change port if port is already in use, handle error gracefully
+    console.log(`node server listening on port :${process.env.PORT}`);
 });
 
 

@@ -32,10 +32,10 @@ const md5 = require('md5');
 var mysql = require('mysql');
 var pool = mysql.createPool({
     connectionLimit: 15, // Default: 0
-    host: 'localhost', // def change to connarts.com.ng before deployment
-    user: 'connarts_ossai',
-    password: "ossai'spassword",
-    database: /* 'connarts_paperless' ||  */'paperless',
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: /* process.env.DB ||  */ process.env.LOCAL_DB,
     acquireTimeout: 1800000, // 10000 is 10 secs
     multipleStatements: true // setting value to 'true' allows for SQL injection attacks if values are not properly escaped
 });
@@ -46,7 +46,7 @@ pool.on('acquire', function (connection) {
 
 var Ravepay = require('ravepay');
 
-var rave = new Ravepay('FLWPUBK-9cd4c40991322af027613870bc4af472-X', 'FLWSECK-26e7c0b3aa54290f3359c127701a1640-X', true); // public key, secret key, true
+var rave = new Ravepay('', '', true); // public key, secret key, true
 
 var bodyParser = require('body-parser');
 var morgan = require('morgan');
@@ -54,9 +54,10 @@ var express = require('express');
 var http = require('http');
 var bodyParser = require('body-parser');
 var session = require('express-session');
+const dotenv = require('dotenv').config();
 var app = express();
 app.use(session({
-    secret: '"xiooi-=-[W$##%%]$NDJ&("]]csd90',
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: true
 }));
@@ -93,14 +94,14 @@ app.set('view engine', 'ejs');
 app.locals.title = 'paperless';
 // => 'My App'
 
-app.locals.email = 'chuks@paperless.com.ng';
+app.locals.email = process.env.APP_LOCALS_EMAIL;
 // => 'me@myapp.com'
 
 
 var server = http.Server(app);
 
-server.listen(60581, function () { // auto change port if port is already in use, handle error gracefully
-    console.log('node server listening on port :60581');
+server.listen(process.env.PORT, function () { // auto change port if port is already in use, handle error gracefully
+    console.log(`node server listening on port :${process.env.PORT}`);
 });
 
 // io connects to the server
@@ -265,9 +266,9 @@ payers.on('connection', function (socket) {
                 "currency": "NGN",
                 "country": "NG",
                 "amount": data.amount, // "1000",
-                "email": data.email, // "nwachukwuossai@gmail.com",
+                "email": data.email,
                 // "suggested_auth": "PIN",
-                "phonenumber": data.phonenumber, // "09055469670",
+                "phonenumber": data.phonenumber,
                 "firstname": data.firstname, // "temi",
                 "lastname": data.lastname, // "desola",
                 "IP": /* socket.request.header['x-forwarded-for'] || */ socket.request.connection.remoteAddress,
@@ -562,7 +563,7 @@ app.post('/newsingletransfer', bodyParser.urlencoded({ extended: true}), functio
             "amount": req.body.amount,
             "narration": "New transfer",
             "currency": req.body.currency,
-            "seckey": "FLWSECK-26e7c0b3aa54290f3359c127701a1640-X",
+            "seckey": process.env.RAVE_SANDBOX_SECRET_KEY,
             "reference": "ref-" + Date.now() // something so descriptive like who and to whom
             // "beneficiary_name": "Kwame Adew" // only pass this for non NGN
         }
@@ -696,7 +697,7 @@ function freezeOrUnfreezeVirtualCard(card_id, status_action) { // status_action 
 
 function chargeBankAccount(params) {
     rave.initiatePayment({
-        "PBFPubKey": "FLWPUBK-7adb6177bd71dd43c2efa3f1229e3b7f-X",
+        "PBFPubKey": process.env.UNKNOWN_RAVE_PUBLIC_KEY, // maybe from their docs??
         "accountbank": "232",// get the bank code from the bank list endpoint.
         "accountnumber": "0061333471",
         "currency": "NGN",
@@ -732,12 +733,13 @@ function chargeBankAccount(params) {
 
 // --- always last
 app.use(function (req, res, next) {
-    res.status(404).send("Sorry can't find that! Go back")
+    res.status(404).send("Sorry can't find that! Please Go back")
 });
 
 /**
  * I can't create virtual cards with test keys
  * 
- * when ever I use the test keys from https://ravesandbox.flutterwave.com/dashboard to create a new virtual card, it always returns { Status: 'fail',
-  Message: 'One or more field failed validation' }
+ * when ever I use the test keys from https://ravesandbox.flutterwave.com/dashboard 
+ * to create a new virtual card, it always returns 
+ * { Status: 'fail', Message: 'One or more field failed validation' }
  */
