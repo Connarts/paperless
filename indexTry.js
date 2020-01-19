@@ -46,7 +46,7 @@ pool.on('acquire', function (connection) {
 
 var Ravepay = require('ravepay');
 
-var rave = new Ravepay('', '', true); // public key, secret key, true
+var rave = new Ravepay('FLWPUBK-9cd4c40991322af027613870bc4af472-X', 'FLWSECK-26e7c0b3aa54290f3359c127701a1640-X', true); // public key, secret key, true
 
 var bodyParser = require('body-parser');
 var morgan = require('morgan');
